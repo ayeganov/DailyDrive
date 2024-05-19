@@ -1,0 +1,97 @@
+.App {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+.chore-chart {
+  display: grid;
+/*  grid-template-columns: repeat(8, 1fr); /* 8 columns for chore name and 7 days */
+  grid-template-columns: 1.5fr repeat(7, 1fr); /* 1 column for chore name, 7 columns for days */
+
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.header {
+  display: contents; /* Ensure header aligns with grid */
+}
+
+.chore-row {
+  display: contents; /* Ensure chore rows align with grid */
+}
+
+.chore-row span,
+.header span {
+  border: 1px solid #ccc;
+}
+
+.chore-row input {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+
+.chore-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.chore-actions .modal-content {
+  width: 300px;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chore-actions h2 {
+  margin-top: 0;
+}
+
+.chore-actions p {
+  margin-bottom: 20px;
+}
+
+.chore-actions button {
+  margin-right: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #f44336;
+  color: white;
+}
+
+.chore-actions button:last-child {
+  background-color: #ccc;
+  color: black;
+}
+
+.chore-actions button:hover {
+  opacity: 0.8;
+}
+
+
+.star {
+  display: inline-block;
+  width: 15vw;
+  height: 15vw;
+  max-width: 100px;
+  max-height: 100px;
+  margin: 0 auto;
+}
+
+.star.completed {
+/*  background-image: url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpolygon%20points%3D%2220%2C1%2024%2C14%2038%2C14%2026%2C22%2030%2C35%2020%2C27%2010%2C35%2014%2C22%202%2C14%2016%2C14%22%20fill%3D%22yellow%22%20%2F%3E%3C%2Fsvg%3E'); */
+
+}
