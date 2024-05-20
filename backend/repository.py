@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from typing import List, Dict, TypeVar, Generic, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
 
 
 T = TypeVar('T')
