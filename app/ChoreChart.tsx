@@ -48,7 +48,6 @@ const ChoreChart: React.FC = () => {
     setChores((prevChores) => prevChores.filter((chore) => chore.id !== id));
   };
 
-  console.log('chores:', chores);
   return (
     <div>
       <div className="bubblegum-sans-regular text-8xl p-8">Daily Drive</div>

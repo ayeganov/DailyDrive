@@ -1,5 +1,7 @@
 "use client";
 import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -37,4 +39,32 @@ export const useAuth = () =>
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+
+export const withAuth = (WrappedComponent: React.FC) =>
+{
+  return (props: any) => {
+    const { isAuthenticated } = useAuth();
+    const router = useRouter();
+
+    useEffect(() =>
+    {
+      if(!isAuthenticated)
+      {
+        router.replace('/login');
+      }
+      else
+      {
+        router.replace('/');
+      }
+    }, [isAuthenticated, router]);
+
+    if (!isAuthenticated)
+    {
+      return null; // or a loading spinner
+    }
+
+    return <WrappedComponent {...props} />;
+  };
 };
