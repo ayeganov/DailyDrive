@@ -14,6 +14,7 @@ psycopg2-binary = "^2.9.9"
 sqlalchemy = "^2.0.30"
 pydantic = "^2.7.1"
 python-dotenv = "^1.0.1"
+fastapi-users = {extras = ["jwt"], version = "^13.0.0"}
 
 
 [build-system]

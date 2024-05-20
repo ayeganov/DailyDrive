@@ -2,14 +2,15 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 
-from storage import StorageInterface
-from postgres_storage import PostgresStorage
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from chore_repository import ChoreRepository
 
 
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +24,7 @@ app = FastAPI()
 database_url: Optional[str] = os.getenv("DATABASE_URL")
 public_url: Optional[str] = os.getenv("BACKEND_PUBLIC_URL")
 
+
 assert public_url is not None, "PUBLIC_URL environment variable is not set"
 assert database_url is not None, "DATABASE_URL environment variable is not set"
 
@@ -33,7 +35,14 @@ app.mount(public_url,
           name="static")
 
 
-storage: StorageInterface = PostgresStorage(database_url)
+def get_db():
+    engine = create_engine(database_url)
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 app.add_middleware(
@@ -51,24 +60,32 @@ class Chore(BaseModel):
     statuses: Dict[str, bool]
 
 
-@app.get("/api/chores", response_model=List[Chore])
-def get_chores():
-    return storage.get_chores()
+@app.get("/api/v1/chores", response_model=List[Chore])
+def get_chores(db: Session = Depends(get_db)):
+    chore_repo = ChoreRepository(db)
+    logger.info("Getting all chores")
+    return chore_repo.get_all()
 
 
-@app.post("/api/chores", response_model=Chore)
-def add_chore(chore: Chore):
-    return storage.add_chore(chore.model_dump())
+@app.post("/api/v1/chores", response_model=Chore)
+def add_chore(chore: Chore, db: Session = Depends(get_db)):
+    chore_repo = ChoreRepository(db)
+    logger.info("Adding a chore")
+    return chore_repo.add(chore.model_dump())
 
 
-@app.put("/api/chores/{chore_id}", response_model=Chore)
-def update_chore(chore_id: int, updated_chore: Chore):
-    return storage.update_chore(chore_id, updated_chore.model_dump())
+@app.put("/api/v1/chores/{chore_id}", response_model=Chore)
+def update_chore(chore_id: int, updated_chore: Chore, db: Session = Depends(get_db)):
+    chore_repo = ChoreRepository(db)
+    logger.info("Updating a chore")
+    return chore_repo.update(chore_id, updated_chore.model_dump())
 
 
-@app.delete("/api/chores/{chore_id}", response_model=Chore)
-def delete_chore(chore_id: int):
-    return storage.delete_chore(chore_id)
+@app.delete("/api/v1/chores/{chore_id}", response_model=Chore)
+def delete_chore(chore_id: int, db: Session = Depends(get_db)):
+    chore_repo = ChoreRepository(db)
+    logger.info(f"Deleting a chore: {chore_id}")
+    return chore_repo.delete(chore_id)
 
 
 def main():

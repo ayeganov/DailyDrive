@@ -1,5 +1,5 @@
 from typing import List, Dict
-from sqlalchemy import create_engine, Column, BigInteger, String, JSON, select
+from sqlalchemy import create_engine, Column, BigInteger, String, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from storage import StorageInterface

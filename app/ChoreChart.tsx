@@ -15,7 +15,7 @@ const ChoreChart: React.FC = () => {
     {
       try
       {
-        const response = await axios.get<Chore[]>('http://localhost:8000/api/chores');
+        const response = await axios.get<Chore[]>('/backend/api/v1/chores');
         setChores(response.data);
       }
       catch (error)
@@ -31,7 +31,8 @@ const ChoreChart: React.FC = () => {
     setChores((prevChores) => [...prevChores, chore]);
   };
 
-  const handleStatusChange = (id: number, day: Days) => {
+  const handleStatusChange = async (id: number, day: Days) =>
+  {
     setChores((prevChores) =>
       prevChores.map((chore) =>
         chore.id === id
@@ -41,13 +42,16 @@ const ChoreChart: React.FC = () => {
     );
   };
 
-  const handleDeleteChore = (id: number) => {
+  const handleDeleteChore = async (id: number) =>
+  {
+    await axios.delete(`/backend/api/v1/chores/${id}`);
     setChores((prevChores) => prevChores.filter((chore) => chore.id !== id));
   };
 
+  console.log('chores:', chores);
   return (
     <div>
-      <div className="bubblegum-sans-regular text-8xl">Chore Chart</div>
+      <div className="bubblegum-sans-regular text-8xl p-8">Daily Drive</div>
       <ChoreForm onAddChore={handleAddChore} />
       <div className="chore-chart">
         <div className="header">

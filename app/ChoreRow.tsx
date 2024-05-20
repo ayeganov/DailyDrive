@@ -8,8 +8,8 @@ import { Chore, Days } from './types';
 interface ChoreRowProps
 {
   chore: Chore;
-  onStatusChange: (id: number, day: Days) => void;
-  onDelete: (id: number) => void;
+  onStatusChange: (id: number, day: Days) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
 }
 
 
@@ -31,7 +31,7 @@ const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete }) 
 
     try
     {
-      await axios.put(`http://localhost:8000/api/chores/${chore.id}`, updatedChore);
+      await axios.put(`/backend/api/v1/chores/${chore.id}`, updatedChore);
       onStatusChange(chore.id, day);
     }
     catch (error)
@@ -44,7 +44,6 @@ const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete }) 
   {
     try
     {
-      await axios.delete(`http://localhost:8000/api/chores/${chore.id}`);
       onDelete(chore.id);
       setIsModalOpen(false);
     }

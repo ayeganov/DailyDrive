@@ -3,9 +3,13 @@ import React, { useEffect } from 'react';
 import ChoreChart from './ChoreChart';
 import './App.css';
 import Modal from 'react-modal';
+import { useAuth } from './AuthContext';
+import LoginPage from './login/page';
 
 
-const App: React.FC = () => {
+const App: React.FC = () =>
+{
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     Modal.setAppElement('body');
@@ -13,7 +17,7 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
-      <ChoreChart />
+      {isAuthenticated ? <ChoreChart /> : <LoginPage />}
     </div>
   );
 };
