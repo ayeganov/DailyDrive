@@ -1,13 +1,14 @@
 from abc import abstractmethod
 from typing import List, Dict, TypeVar, Generic, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 
 T = TypeVar('T')
 
 
 class BaseRepository(Generic[T]):
-    def __init__(self, session: Session):
+    def __init__(self, session: AsyncSession):
         self.session = session
 
     @property
@@ -17,30 +18,39 @@ class BaseRepository(Generic[T]):
         This method should be implemented in the child class and return the SQLAlchemy model
         """
 
-    def get_all(self) -> List[Dict]:
-        return [entity.__dict__ for entity in self.session.query(self.model).all()]
+    async def get_all(self) -> List[T]:
+        result = await self.session.execute(select(self.model))
+        entities = result.scalars().all()
+        return entities
 
-    def get_by_id(self, entity_id: int) -> Optional[T]:
-        entity = self.session.query(self.model).filter(self.model.id == entity_id).first()
-        return entity.__dict__ if entity else None
+    async def get_by_id(self, entity_id: int) -> Optional[T]:
+        result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
+        entity = result.scalars().first()
+        return entity if entity else None
 
-    def add(self, entity_data: Dict) -> Dict:
+    async def add(self, entity_data: Dict) -> T:
         entity = self.model(**entity_data)
         self.session.add(entity)
-        self.session.commit()
-        self.session.refresh(entity)
-        return entity.__dict__
+        await self.session.commit()
+        await self.session.refresh(entity)
+        return entity
 
-    def update(self, entity_id: int, updated_data: Dict) -> Dict:
-        entity = self.session.query(self.model).filter(self.model.id == entity_id).first()
-        for key, value in updated_data.items():
-            setattr(entity, key, value)
-        self.session.commit()
-        self.session.refresh(entity)
-        return entity.__dict__
+    async def update(self, entity_id: int, updated_data: Dict) -> Optional[T]:
+        result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
+        entity = result.scalars().first()
+        if entity:
+            for key, value in updated_data.items():
+                setattr(entity, key, value)
+            await self.session.commit()
+            await self.session.refresh(entity)
+            return entity
+        return None
 
-    def delete(self, entity_id: int) -> Dict:
-        entity = self.session.query(self.model).filter(self.model.id == entity_id).first()
-        self.session.delete(entity)
-        self.session.commit()
-        return entity.__dict__
+    async def delete(self, entity_id: int) -> Optional[T]:
+        result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
+        entity = result.scalars().first()
+        if entity:
+            await self.session.delete(entity)
+            await self.session.commit()
+            return entity
+        return None

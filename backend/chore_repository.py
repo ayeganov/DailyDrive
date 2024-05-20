@@ -1,11 +1,9 @@
-from typing import List, Dict
-from sqlalchemy import create_engine, Column, BigInteger, String, JSON
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session
+from fastapi import Depends
+from sqlalchemy import Column, BigInteger, String, JSON
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database import Base, get_async_session
 from repository import BaseRepository
-
-
-Base = declarative_base()
 
 
 class Chore(Base):
@@ -16,9 +14,11 @@ class Chore(Base):
 
 
 class ChoreRepository(BaseRepository[Chore]):
-    def __init__(self, session: Session):
-        super().__init__(session)
-
     @property
     def model(self) -> Chore:
         return Chore
+
+
+
+async def get_chore_db(session: AsyncSession = Depends(get_async_session)):
+    yield ChoreRepository(session)
