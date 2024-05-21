@@ -31,7 +31,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                                           form_data,
           {headers: {'Content-Type': 'multipart/form-data'}});
 
-      console.log('Login info:', login_info);
       const auth_token = login_info.data.access_token;
       localStorage.setItem('auth_token', auth_token);
       setIsAuthenticated(true);
