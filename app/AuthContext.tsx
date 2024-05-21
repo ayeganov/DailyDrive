@@ -1,15 +1,19 @@
 "use client";
 import React, { createContext, useState, useContext, ReactNode } from 'react';
+import axios from "axios";
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -17,7 +21,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (username: string, password: string) =>
   {
     console.log('Logging in with:', username, password);
-    setIsAuthenticated(true);
+    try
+    {
+      const form_data = new FormData();
+      form_data.set('username', username);
+      form_data.set('password', password);
+
+      const login_info = await axios.post('/backend/auth/jwt/login',
+                                          form_data,
+          {headers: {'Content-Type': 'multipart/form-data'}});
+
+      console.log('Login info:', login_info);
+      const auth_token = login_info.data.access_token;
+      localStorage.setItem('auth_token', auth_token);
+      setIsAuthenticated(true);
+      return true;
+    }
+    catch (error)
+    {
+      console.error('Error logging in:', error);
+      return false;
+    }
   };
 
   const logout = () => {
@@ -53,10 +77,6 @@ export const withAuth = (WrappedComponent: React.FC) =>
       if(!isAuthenticated)
       {
         router.replace('/login');
-      }
-      else
-      {
-        router.replace('/');
       }
     }, [isAuthenticated, router]);
 

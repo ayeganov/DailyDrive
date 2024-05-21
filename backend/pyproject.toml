@@ -18,6 +18,7 @@ fastapi-users = {extras = ["sqlalchemy"], version = "^13.0.0"}
 aiosqlite = "^0.20.0"
 asyncpg = "^0.29.0"
 pylint = "^3.2.2"
+password-validator = "^1.0"
 
 
 [build-system]

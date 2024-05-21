@@ -913,6 +913,17 @@ files = [
 ]
 
 [[package]]
+name = "password-validator"
+version = "1.0"
+description = "Validates password according to flexible and intuitive specifications"
+optional = false
+python-versions = "*"
+files = [
+    {file = "password_validator-1.0-py3-none-any.whl", hash = "sha256:4de1758e15b4e9bdf32933fcc99ce89efcdd28566e26e130726bb4295dd0d44c"},
+    {file = "password_validator-1.0.tar.gz", hash = "sha256:f12c1036b17c67fab607ad8003f43e73940793d7ab89bc7efcb2cd47c024533b"},
+]
+
+[[package]]
 name = "platformdirs"
 version = "4.2.2"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
@@ -1807,4 +1818,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "7219dc71715c9be39d1885ad6560ab471eeff204fd08fec6c3c29ccf8354b865"
+content-hash = "c45d99c1c943993ddb2cda5f21227c1e7106450d83e1496ccf1e595e3ae58e53"
