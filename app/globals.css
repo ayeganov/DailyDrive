@@ -16,3 +16,20 @@
   font-style: normal;
 }
 
+
+#chore-chart {
+  background-image: url('/images/background-1.jpeg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+}
+
+#login-register {
+  background-image: url('/images/login-bg-1.jpeg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+}
+
