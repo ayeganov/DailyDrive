@@ -25,7 +25,7 @@ const RegisterPage: React.FC = () =>
 
   const check_password = (password: string) =>
   {
-    const password_validated: boolean = schema.validate(password);
+    const password_validated: any = schema.validate(password);
 
     setPassword(password);
     if(!password_validated)
@@ -41,7 +41,7 @@ const RegisterPage: React.FC = () =>
   {
     e.preventDefault();
 
-    const password_validated: boolean = schema.validate(password);
+    const password_validated: any = schema.validate(password);
 
     if(!password_validated)
     {

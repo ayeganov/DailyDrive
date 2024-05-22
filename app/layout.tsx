@@ -20,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="bubblegum-sans-regular text-8xl p-8">Daily Drive</div>
         <AuthProvider>
           {children}
         </AuthProvider>

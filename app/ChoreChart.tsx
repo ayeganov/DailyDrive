@@ -49,7 +49,8 @@ const ChoreChart: React.FC = () => {
   };
 
   return (
-    <div>
+    <div id="chore-chart">
+      <div className="bubblegum-sans-regular text-8xl p-8 " style={{WebkitTextStroke: "5px white"}}>Daily Drive</div>
       <ChoreForm onAddChore={handleAddChore} />
       <div className="chore-chart">
         <div className="header">
