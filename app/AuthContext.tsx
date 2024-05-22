@@ -3,10 +3,12 @@ import React, { createContext, useState, useContext, ReactNode } from 'react';
 import axios from "axios";
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { jwtDecode } from 'jwt-decode';
 
 
 interface AuthContextType {
-  isAuthenticated: boolean;
+  is_authenticated: boolean;
+  active_user: string;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
@@ -15,8 +17,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 
+const save_auth_token = (auth_token: string) =>
+{
+  localStorage.setItem('auth_token', auth_token);
+}
+
+
+const get_auth_token = () =>
+{
+  return localStorage.getItem('auth_token');
+}
+
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [is_authenticated, set_is_authenticated] = useState<boolean>(false);
 
   const login = async (username: string, password: string) =>
   {
@@ -32,8 +46,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           {headers: {'Content-Type': 'multipart/form-data'}});
 
       const auth_token = login_info.data.access_token;
-      localStorage.setItem('auth_token', auth_token);
-      setIsAuthenticated(true);
+      save_auth_token(auth_token);
+      set_is_authenticated(true);
       return true;
     }
     catch (error)
@@ -44,11 +58,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
+    set_is_authenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ is_authenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -68,18 +82,18 @@ export const useAuth = () =>
 export const withAuth = (WrappedComponent: React.FC) =>
 {
   return (props: any) => {
-    const { isAuthenticated } = useAuth();
+    const { is_authenticated } = useAuth();
     const router = useRouter();
 
     useEffect(() =>
     {
-      if(!isAuthenticated)
+      if(!is_authenticated)
       {
         router.replace('/login');
       }
-    }, [isAuthenticated, router]);
+    }, [is_authenticated, router]);
 
-    if (!isAuthenticated)
+    if (!is_authenticated)
     {
       return null; // or a loading spinner
     }

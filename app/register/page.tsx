@@ -19,6 +19,7 @@ const RegisterPage: React.FC = () =>
 {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
 
@@ -49,7 +50,7 @@ const RegisterPage: React.FC = () =>
 
     try
     {
-      await axios.post("/backend/auth/register", { email: email, password: password });
+      await axios.post("/backend/auth/register", { email: email, password: password, name: name });
       setError('');
       router.replace('/');
     }
@@ -77,6 +78,17 @@ const RegisterPage: React.FC = () =>
               </div>
             )}
 
+            <label htmlFor='#name' className="font-semibold text-sm text-gray-600 pb-1 block">Name</label>
+            <input
+              type="text"
+              maxLength={25}
+              minLength={2}
+              id="#name"
+              className="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
             <label htmlFor="#email" className="font-semibold text-sm text-gray-600 pb-1 block">E-mail</label>
             <input
               type="email"

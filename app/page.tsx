@@ -9,7 +9,7 @@ import LoginPage from './login/page';
 
 const App: React.FC = () =>
 {
-  const { isAuthenticated } = useAuth();
+  const { is_authenticated } = useAuth();
 
   useEffect(() => {
     Modal.setAppElement('body');
@@ -17,7 +17,7 @@ const App: React.FC = () =>
 
   return (
     <div className="App">
-      {isAuthenticated ? <ChoreChart /> : <LoginPage />}
+      {is_authenticated ? <ChoreChart /> : <LoginPage />}
     </div>
   );
 };

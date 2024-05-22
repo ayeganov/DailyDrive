@@ -3,13 +3,14 @@ import uuid
 
 from fastapi import Depends, Request
 from fastapi_users import FastAPIUsers, BaseUserManager, InvalidPasswordException, UUIDIDMixin, schemas
-from fastapi_users.authentication import AuthenticationBackend, BearerTransport
-from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
+from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
+#from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
-from fastapi_users_db_sqlalchemy.access_token import (
-    SQLAlchemyAccessTokenDatabase,
-    SQLAlchemyBaseAccessTokenTableUUID,
-)
+#from fastapi_users_db_sqlalchemy.access_token import (
+#    SQLAlchemyAccessTokenDatabase,
+#    SQLAlchemyBaseAccessTokenTableUUID,
+#)
+from sqlalchemy import Column, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from password_validator import PasswordValidator
 
@@ -17,23 +18,20 @@ from database import Base, get_async_session
 
 
 validator = PasswordValidator()
-validator.min(8)
-validator.max(20)
-validator.uppercase()
-validator.lowercase()
-validator.digits()
+validator.min(8).max(20).uppercase().lowercase().digits()
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
-    pass
+    __tablename__ = "user"
+    name = Column(String, nullable=True)
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
-    pass
+    name: Optional[str] = None
 
 
 class UserCreate(schemas.BaseUserCreate):
-    pass
+    name: Optional[str] = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):
@@ -66,22 +64,26 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         return await super().validate_password(password, user)
 
 
-class AccessToken(SQLAlchemyBaseAccessTokenTableUUID, Base):
-    pass
+#class AccessToken(SQLAlchemyBaseAccessTokenTableUUID, Base):
+#    pass
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield SQLAlchemyUserDatabase(session, User)
 
 
-async def get_access_token_db(session: AsyncSession = Depends(get_async_session),):
-    yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
+#async def get_access_token_db(session: AsyncSession = Depends(get_async_session),):
+#    yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
+#
+#
+#def get_token_database_strategy(
+#    access_token_db: AccessTokenDatabase[AccessToken] = Depends(get_access_token_db),
+#) -> DatabaseStrategy:
+#    return DatabaseStrategy(access_token_db, lifetime_seconds=3600)
 
 
-def get_token_database_strategy(
-    access_token_db: AccessTokenDatabase[AccessToken] = Depends(get_access_token_db),
-) -> DatabaseStrategy:
-    return DatabaseStrategy(access_token_db, lifetime_seconds=3600)
+def get_jwt_strategy():
+    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):
@@ -91,7 +93,9 @@ async def get_user_manager(user_db=Depends(get_user_db)):
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 
-auth_backend = AuthenticationBackend(name="db", transport=bearer_transport, get_strategy=get_token_database_strategy)
+auth_backend = AuthenticationBackend(name="jwt",
+                                     transport=bearer_transport,
+                                     get_strategy=get_jwt_strategy,)
 
 
 fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])
