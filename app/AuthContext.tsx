@@ -6,63 +6,120 @@ import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 
 
-interface AuthContextType {
-  is_authenticated: boolean;
-  active_user: string;
+interface User
+{
+  username: string;
+  token: string;
+}
+
+
+interface AuthContextType
+{
+  users: User[];
+  activeUser: string | null;
   login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: (username: string) => void;
+  switchUser: (username: string) => void;
 }
 
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 
-const save_auth_token = (auth_token: string) =>
+const saveAuthTokens = (users: User[]) =>
 {
-  localStorage.setItem('auth_token', auth_token);
-}
-
-
-const get_auth_token = () =>
-{
-  return localStorage.getItem('auth_token');
-}
-
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [is_authenticated, set_is_authenticated] = useState<boolean>(false);
-
-  const login = async (username: string, password: string) =>
+  if (typeof window !== 'undefined')
   {
-    console.log('Logging in with:', username, password);
-    try
+    localStorage.setItem('auth_tokens', JSON.stringify(users));
+  }
+};
+
+
+const getAuthTokens = (): User[] =>
+{
+  if (typeof window !== 'undefined')
+  {
+    const storedTokens = localStorage.getItem('auth_tokens');
+    return storedTokens ? JSON.parse(storedTokens) : [];
+  }
+  return [];
+};
+
+
+const get_active_user = (users: User[]): string | null =>
+{
+  if (typeof window !== 'undefined')
+  {
+    const active_user = localStorage.getItem('active_user');
+    if (storedTokens)
     {
-      const form_data = new FormData();
-      form_data.set('username', username);
-      form_data.set('password', password);
-
-      const login_info = await axios.post('/backend/auth/jwt/login',
-                                          form_data,
-          {headers: {'Content-Type': 'multipart/form-data'}});
-
-      const auth_token = login_info.data.access_token;
-      save_auth_token(auth_token);
-      set_is_authenticated(true);
-      return true;
+      const activeToken = users.find((user) => user.username === JSON.parse(storedTokens));
+      return activeToken ? activeToken.username : null;
     }
-    catch (error)
+  }
+  return null;
+}
+
+
+export const AuthProvider = ({ children }: { children: ReactNode }) =>
+{
+  const [users, setUsers] = useState<User[]>(getAuthTokens());
+  const [activeUser, setActiveUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const activeToken = users.find((user) => user.username === activeUser);
+    if (activeToken)
     {
+      axios.defaults.headers.common.Authorization = `Bearer ${activeToken.token}`;
+    }
+  }, [activeUser, users]);
+
+  useEffect(() => {
+    const stored_users = getAuthTokens();
+    setUsers(stored_users);
+  }, []);
+
+
+  const login = async (username: string, password: string) => {
+    console.log('Logging in with:', username, password);
+    try {
+      const formData = new FormData();
+      formData.set('username', username);
+      formData.set('password', password);
+
+      const loginInfo = await axios.post('/backend/auth/jwt/login', formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const authToken = loginInfo.data.access_token;
+      const updatedUsers = [...users, { username, token: authToken }];
+      setUsers(updatedUsers);
+      saveAuthTokens(updatedUsers);
+      setActiveUser(username);
+      return true;
+    } catch (error) {
       console.error('Error logging in:', error);
       return false;
     }
   };
 
-  const logout = () => {
-    set_is_authenticated(false);
+  const logout = (username: string) =>
+  {
+    const updatedUsers = users.filter((user) => user.username !== username);
+    setUsers(updatedUsers);
+    saveAuthTokens(updatedUsers);
+    if (activeUser === username) {
+      setActiveUser(null);
+    }
+  };
+
+  const switchUser = (username: string) => {
+    setActiveUser(username);
   };
 
   return (
-    <AuthContext.Provider value={{ is_authenticated, login, logout }}>
+    <AuthContext.Provider value={{ users, activeUser, login, logout, switchUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -72,7 +129,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () =>
 {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (context === undefined)
+  {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
