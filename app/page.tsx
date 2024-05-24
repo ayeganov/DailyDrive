@@ -25,16 +25,17 @@ const App: React.FC = () =>
     Modal.setAppElement('body');
   }, []);
 
-  const show_carousel = hydrated && active_user === null && users.length > 0;
-  const show_login = hydrated && active_user === null && users.length === 0;
+  const show_carousel = hydrated && active_user === null && users.size > 0;
+  const show_login = hydrated && active_user === null && users.size === 0;
   const show_chore_chart = hydrated && active_user !== null;
 
+  const user_list = Array.from(users.values());
   return (
     <div className="App">
       {show_carousel && (
         <div className="container mx-auto">
           <h1 className="text-2xl font-bold text-center my-8">User Avatars</h1>
-            <AvatarCarousel users={users} on_user_click={handle_user_choice} />
+            <AvatarCarousel users={user_list} on_user_click={handle_user_choice} />
         </div>
       )}
       {show_login && <LoginPage />}

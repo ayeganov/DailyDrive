@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { User } from './types';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import Link from 'next/link';
 
 
 interface AvatarCarouselProps
@@ -34,6 +35,19 @@ const AvatarCarousel: React.FC<AvatarCarouselProps> = ({ users, on_user_click })
   };
 
   return (
+    <>
+    <div className="flex items-center justify-center w-full h-20 bg-gray-100">
+      <div className="text-center sm:text-left whitespace-nowrap">
+        <Link href="/login" className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-6xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
+          <span className="inline-block ml-1 lucky-font text-green-300">Login</span>
+        </Link>
+      </div>
+      <div className="text-center sm:text-right whitespace-nowrap">
+        <Link href="/register" className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-6xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
+          <span className="inline-block ml-1 lucky-font text-blue-300">Register</span>
+        </Link>
+      </div>
+    </div>
     <div className="relative flex items-center justify-center w-full h-screen bg-gray-100">
       <button
         className="absolute left-5 z-10 p-2 text-white bg-gray-600 rounded-l-full rounded-r-3xl focus:outline-none"
@@ -65,6 +79,7 @@ const AvatarCarousel: React.FC<AvatarCarouselProps> = ({ users, on_user_click })
         <FaArrowRight size={40} className="absolute right-2 top-1/2 transform -translate-y-1/2" />
       </button>
     </div>
+    </>
   );
 };
 

@@ -4,17 +4,13 @@ import axios from "axios";
 import { useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
-
-interface User
-{
+interface User {
   username: string;
   token: string;
 }
 
-
-interface AuthContextType
-{
-  users: User[];
+interface AuthContextType {
+  users: Map<string, User>;
   active_user: string | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: (username: string) => void;
@@ -24,21 +20,16 @@ interface AuthContextType
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-
-const save_users_to_local_storage = (users: User[]) =>
-{
-  if(typeof window !== 'undefined')
-  {
-    console.log("Saving users to local storage:", users);
-    localStorage.setItem('users', JSON.stringify(users));
+const save_users_to_local_storage = (users: Map<string, User>) => {
+  if (typeof window !== 'undefined') {
+    const usersArray = Array.from(users.values());
+    console.log("Saving users to local storage:", usersArray);
+    localStorage.setItem('users', JSON.stringify(usersArray));
   }
 };
 
-
-const get_users_from_local_storage = (): User[] =>
-{
-  if (typeof window !== 'undefined')
-  {
+const get_users_from_local_storage = (): User[] => {
+  if (typeof window !== 'undefined') {
     const stored_users = localStorage.getItem('users');
     console.log("Stored users:", stored_users);
     return stored_users ? JSON.parse(stored_users) : [];
@@ -47,43 +38,37 @@ const get_users_from_local_storage = (): User[] =>
   return [];
 };
 
-
-const is_token_expired = (token: string): boolean =>
-{
+const is_token_expired = (token: string): boolean => {
   const decoded_token = jwtDecode(token);
-  if(decoded_token === undefined)
-  {
+  if (decoded_token === undefined) {
     return true;
   }
 
   const now = Date.now() / 1000;
 
-  if(decoded_token.exp === undefined)
+  if (decoded_token.exp === undefined)
   {
     return true;
   }
 
   return decoded_token.exp < now;
-}
+};
 
-const restore_logged_users = (): User[] =>
-{
+const restore_logged_users = (): Map<string, User> => {
   const users = get_users_from_local_storage();
   const valid_users = users.filter((user) => !is_token_expired(user.token));
   console.log("Valid users:", valid_users);
-  return valid_users;
+  return new Map(valid_users.map(user => [user.username, user]));
 };
 
 
-export const AuthProvider = ({ children }: { children: ReactNode }) =>
-{
-  const [users, setUsers] = useState<User[]>(restore_logged_users());
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [users, setUsers] = useState<Map<string, User>>(restore_logged_users());
   const [active_user, setActiveUser] = useState<string | null>(null);
 
   useEffect(() => {
-    const current_active_user = users.find((user) => user.username === active_user);
-    if (current_active_user)
-    {
+    const current_active_user = users.get(active_user || '');
+    if (current_active_user) {
       console.log("3 Setting axios token:", current_active_user.token);
       axios.defaults.headers.common.Authorization = `Bearer ${current_active_user.token}`;
     }
@@ -94,7 +79,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) =>
     save_users_to_local_storage(users);
   }, [users]);
 
-
   const login = async (username: string, password: string) => {
     console.log('Logging in with:', username, password);
     try {
@@ -102,39 +86,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) =>
       formData.set('username', username);
       formData.set('password', password);
 
-      const loginInfo = await axios.post('/backend/auth/jwt/login', formData,
-      {
+      const loginInfo = await axios.post('/backend/auth/jwt/login', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       const auth_token = loginInfo.data.access_token;
-      const updated_users = [...users, { username, token: auth_token }];
+      const updated_users = new Map(users);
+      updated_users.set(username, { username, token: auth_token });
 
       setUsers(updated_users);
       setActiveUser(username);
 
       return true;
-    }
-    catch (error)
-    {
+    } catch (error) {
       console.error('Error logging in:', error);
       return false;
     }
   };
 
-  const logout = (username: string) =>
-  {
-    const updated_users = users.filter((user) => user.username !== username);
+  const logout = (username: string) => {
+    const updated_users = new Map(users);
+    updated_users.delete(username);
     setUsers(updated_users);
 
-    if (active_user === username)
-    {
+    if (active_user === username) {
       setActiveUser(null);
     }
   };
 
-  const switch_user = (username: string) =>
-  {
+  const switch_user = (username: string) => {
     setActiveUser(username);
   };
 
@@ -145,12 +125,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) =>
   );
 };
 
-
-export const useAuth = () =>
-{
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined)
-  {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
 
