@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ChoreChart from './ChoreChart';
 import './App.css';
 import Modal from 'react-modal';
@@ -11,45 +11,36 @@ import AvatarCarousel from './UserAvatars';
 
 const App: React.FC = () =>
 {
-  const users: User[] = [
-    { username: 'abc', token: 'abc123' },
-    { username: 'def', token: 'abc123' },
-    { username: 'ghi', token: 'abc123' },
-    { username: 'jql', token: 'abc123' },
-    { username: 'mn', token: 'abc123' },
-    { username: 'op', token: 'abc123' },
-    { username: 'qr', token: 'abc123' },
-    { username: 'st', token: 'abc123' },
-    { username: 'uv', token: 'abc123' },
-    { username: 'wx', token: 'abc123' },
-    { username: 'yz', token: 'abc123' },
-    // Add more users as needed
-  ];
+  const { users, active_user, switch_user } = useAuth();
+  const [hydrated, setHydrated] = useState(false);
 
-  const handleUserClick = (user: User) => {
+
+  const handle_user_choice = (user: User) => {
     console.log('Clicked user:', user);
+    switch_user(user.username);
   };
 
-
-  const { activeUser } = useAuth();
-
   useEffect(() => {
+    setHydrated(true);
     Modal.setAppElement('body');
   }, []);
 
+  const show_carousel = hydrated && active_user === null && users.length > 0;
+  const show_login = hydrated && active_user === null && users.length === 0;
+  const show_chore_chart = hydrated && active_user !== null;
+
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-bold text-center my-8">User Avatars</h1>
-        <AvatarCarousel users={users} on_user_click={handleUserClick} />
+    <div className="App">
+      {show_carousel && (
+        <div className="container mx-auto">
+          <h1 className="text-2xl font-bold text-center my-8">User Avatars</h1>
+            <AvatarCarousel users={users} on_user_click={handle_user_choice} />
+        </div>
+      )}
+      {show_login && <LoginPage />}
+      {show_chore_chart && <ChoreChart />}
     </div>
   );
-
-
-//  return (
-//    <div className="App">
-//      {activeUser ? <ChoreChart /> : <LoginPage />}
-//    </div>
-//  );
 };
 
 export default App;

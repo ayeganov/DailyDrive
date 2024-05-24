@@ -37,17 +37,19 @@ const LoginPage: React.FC = () => {
               </div>
             )}
 
-            <label className="font-semibold text-sm text-white pb-1 block lucky-font" style={{ letterSpacing: "3px" }}>E-mail</label>
+            <label htmlFor="#email" className="font-semibold text-sm text-white pb-1 block lucky-font" style={{ letterSpacing: "3px" }}>E-mail</label>
             <input
-              type="text"
+              type="email"
               className="rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full bg-white border-2 border-violet-700 text-indigo-950"
+              id="#email"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
             />
-            <label className="font-semibold text-sm pb-1 block lucky-font text-white" style={{ letterSpacing: "3px" }}>Password</label>
+            <label htmlFor="#password" className="font-semibold text-sm pb-1 block lucky-font text-white" style={{ letterSpacing: "3px" }}>Password</label>
             <input
               type="password"
+              id="#password"
               className="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full bg-white text-indigo-950"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

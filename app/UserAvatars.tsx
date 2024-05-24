@@ -11,7 +11,8 @@ interface AvatarCarouselProps
   on_user_click: (user: User) => void;
 }
 
-const AvatarCarousel: React.FC<AvatarCarouselProps> = ({ users }) => {
+
+const AvatarCarousel: React.FC<AvatarCarouselProps> = ({ users, on_user_click }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handlePrev = () => {
@@ -45,6 +46,7 @@ const AvatarCarousel: React.FC<AvatarCarouselProps> = ({ users }) => {
         {getVisibleUsers().map((user, index) => (
           <div
             key={user.username}
+            onClick={() => on_user_click(user)}
             className={`transition-transform duration-300 ease-in-out ${
               index === 1 ? 'scale-150' : 'scale-100'
             }`}
