@@ -50,8 +50,7 @@ const ChoreChart: React.FC = () => {
 
   return (
     <div id="chore-chart">
-      <div className="bubblegum-sans-regular text-8xl p-8 " style={{WebkitTextStroke: "5px white"}}>Daily Drive</div>
-      <ChoreForm onAddChore={handleAddChore} />
+      <div className="dulce-font text-6xl p-8 daily-drive-title text-indigo-400 text-center" style={{}}>Daily Drive</div>
       <div className="chore-chart">
         <div className="header">
           <WeekdayCell key="Chore" day="Chore" color_class='bg-orange-500' />
@@ -70,6 +69,8 @@ const ChoreChart: React.FC = () => {
                     onStatusChange={handleStatusChange} />
       ))}
       </div>
+      <ChoreForm onAddChore={handleAddChore} />
+
     </div>
   );
 };
