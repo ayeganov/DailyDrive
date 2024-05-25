@@ -73,6 +73,10 @@ const RegisterPage: React.FC = () =>
       {
         setError('User already exists');
       }
+      else
+      {
+        setError(error.message || 'An error occurred');
+      }
     }
   };
 

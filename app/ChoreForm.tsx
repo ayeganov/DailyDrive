@@ -31,6 +31,7 @@ const ChoreForm: React.FC<ChoreFormProps> = ({ onAddChore }) =>
 
     try
     {
+      console.log("Adding chore: ", newChore);
       const response = await axios.post<Chore>("/backend/api/v1/chores", newChore);
       onAddChore(response.data);
       setChoreName("");

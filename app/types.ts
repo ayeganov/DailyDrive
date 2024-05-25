@@ -3,6 +3,7 @@ export interface Chore
   id: number;
   name: string;
   statuses: { [key: string]: boolean };
+  user_id?: string;
 }
 
 

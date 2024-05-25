@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 import logging
 import os
+from uuid import UUID, uuid4
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends
@@ -74,29 +75,40 @@ class Chore(BaseModel):
     id: int
     name: str
     statuses: Dict[str, bool]
+    user_id: Optional[UUID]
 
 
-@app.get("/api/v1/chores", response_model=List[Chore])
-async def get_chores(chore_repo: ChoreRepository = Depends(get_chore_db)):
-    logger.info("Getting all chores")
-    return await chore_repo.get_all()
+@app.get("/api/v1/chores", response_model=List[Chore], tags=["chores"])
+async def get_chores(chore_repo: ChoreRepository = Depends(get_chore_db),
+                     user=Depends(current_active_user)):
+    logger.info("Getting all chores for user: %s", user.id)
+    return await chore_repo.get_by_user_id(user.id)
 
 
-@app.post("/api/v1/chores", response_model=Chore)
-async def add_chore(chore: Chore, chore_repo: ChoreRepository = Depends(get_chore_db)):
+@app.post("/api/v1/chores", response_model=Chore, tags=["chores"])
+async def add_chore(chore: Chore,
+                    chore_repo: ChoreRepository = Depends(get_chore_db),
+                    user=Depends(current_active_user)):
     logger.info("Adding a chore")
-    return await chore_repo.add(chore.model_dump())
+    chore.user_id = user.id
+    return await chore_repo.add(chore.model_dump(exclude_unset=True))
 
 
-@app.put("/api/v1/chores/{chore_id}", response_model=Chore)
-async def update_chore(chore_id: int, updated_chore: Chore, chore_repo: ChoreRepository = Depends(get_chore_db)):
-    logger.info("Updating a chore")
+@app.put("/api/v1/chores/{chore_id}", response_model=Chore, tags=["chores"])
+async def update_chore(chore_id: int,
+                       updated_chore: Chore,
+                       chore_repo: ChoreRepository = Depends(get_chore_db),
+                       user=Depends(current_active_user)):
+    logger.info("Updating a chore for user")
+    updated_chore.user_id = user.id
     return await chore_repo.update(chore_id, updated_chore.model_dump())
 
 
-@app.delete("/api/v1/chores/{chore_id}", response_model=Chore)
-async def delete_chore(chore_id: int, chore_repo: ChoreRepository = Depends(get_chore_db)):
-    logger.info(f"Deleting a chore: {chore_id}")
+@app.delete("/api/v1/chores/{chore_id}", response_model=Chore, tags=["chores"])
+async def delete_chore(chore_id: int,
+                       chore_repo: ChoreRepository = Depends(get_chore_db),
+                       _=Depends(current_active_user)):
+    logger.info("Deleting a chore: %s", chore_id)
     return await chore_repo.delete(chore_id)
 
 
