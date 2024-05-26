@@ -75,7 +75,7 @@ class Chore(BaseModel):
     id: int
     name: str
     statuses: Dict[str, bool]
-    user_id: Optional[UUID]
+    user_id: Optional[UUID] = None
 
 
 @app.get("/api/v1/chores", response_model=List[Chore], tags=["chores"])
@@ -89,7 +89,7 @@ async def get_chores(chore_repo: ChoreRepository = Depends(get_chore_db),
 async def add_chore(chore: Chore,
                     chore_repo: ChoreRepository = Depends(get_chore_db),
                     user=Depends(current_active_user)):
-    logger.info("Adding a chore")
+    logger.info(f"Adding a chore: {chore}")
     chore.user_id = user.id
     return await chore_repo.add(chore.model_dump(exclude_unset=True))
 

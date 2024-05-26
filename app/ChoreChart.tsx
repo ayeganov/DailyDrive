@@ -31,7 +31,7 @@ const ChoreChart: React.FC = () => {
     };
 
     fetchChores();
-  }, [active_user]);
+  }, [active_user, user_initialized]);
 
   const handleAddChore = (chore: Chore) => {
     setChores((prevChores) => [...prevChores, chore]);
