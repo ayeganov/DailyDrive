@@ -99,7 +99,7 @@ async def update_chore(chore_id: int,
                        updated_chore: Chore,
                        chore_repo: ChoreRepository = Depends(get_chore_db),
                        user=Depends(current_active_user)):
-    logger.info("Updating a chore for user")
+    logger.info("Updating a chore for user %s", user.id)
     updated_chore.user_id = user.id
     return await chore_repo.update(chore_id, updated_chore.model_dump())
 
