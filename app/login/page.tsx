@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { BiSolidLogInCircle } from "react-icons/bi";
-
 
 
 const LoginPage: React.FC = () => {
@@ -14,14 +14,19 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const router = useRouter();
+
+  const handle_login = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await login(username, password);
-    if (!success)
+    if (success)
+    {
+      router.push('/');
+    }
+    else
     {
       setError('Invalid username or password');
     }
-
   };
 
   return (
@@ -29,7 +34,7 @@ const LoginPage: React.FC = () => {
       <div className="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
         <h1 className="font-bold text-center text-3xl mb-5 lucky-font text-cyan-500" style={{ letterSpacing: "3px", WebkitTextStroke: "1px white" }}>Login</h1>
         <div className="bg-violet-700 shadow w-full rounded-lg border-4 border-white">
-          <form onSubmit={handleSubmit} className="px-5 py-7">
+          <form onSubmit={handle_login} className="px-5 py-7">
             {error && (
               <div role="alert" className="alert alert-warning">
                 <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
@@ -37,17 +42,19 @@ const LoginPage: React.FC = () => {
               </div>
             )}
 
-            <label className="font-semibold text-sm text-white pb-1 block lucky-font" style={{ letterSpacing: "3px" }}>E-mail</label>
+            <label htmlFor="#email" className="font-semibold text-sm text-white pb-1 block lucky-font" style={{ letterSpacing: "3px" }}>E-mail</label>
             <input
-              type="text"
+              type="email"
               className="rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full bg-white border-2 border-violet-700 text-indigo-950"
+              id="#email"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
             />
-            <label className="font-semibold text-sm pb-1 block lucky-font text-white" style={{ letterSpacing: "3px" }}>Password</label>
+            <label htmlFor="#password" className="font-semibold text-sm pb-1 block lucky-font text-white" style={{ letterSpacing: "3px" }}>Password</label>
             <input
               type="password"
+              id="#password"
               className="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full bg-white text-indigo-950"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

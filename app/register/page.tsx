@@ -5,6 +5,7 @@ import axios from "axios";
 import Link from 'next/link';
 import validatePassword from 'password-validator';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../AuthContext';
 
 
 var schema = new validatePassword();
@@ -21,6 +22,8 @@ const RegisterPage: React.FC = () =>
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const { login } = useAuth();
+
   const router = useRouter();
 
   const check_password = (password: string) =>
@@ -52,7 +55,15 @@ const RegisterPage: React.FC = () =>
     {
       await axios.post("/backend/auth/register", { email: email, password: password, name: name });
       setError('');
-      router.replace('/');
+      const success = await login(email, password);
+      if (success)
+      {
+        router.push('/');
+      }
+      else
+      {
+        setError('Invalid username or password');
+      }
     }
     catch (error: any)
     {

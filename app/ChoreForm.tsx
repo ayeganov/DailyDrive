@@ -45,6 +45,7 @@ const ChoreForm: React.FC<ChoreFormProps> = ({ onAddChore }) =>
     <form onSubmit={handleSubmit}>
       <input
         type="text"
+        id="chore_name"
         value={choreName}
         onChange={(e) => setChoreName(e.target.value)}
         placeholder="Enter chore name"

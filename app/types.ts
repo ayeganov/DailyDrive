@@ -6,4 +6,11 @@ export interface Chore
 }
 
 
+export interface User
+{
+  username: string;
+  token: string;
+}
+
+
 export type Days = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';

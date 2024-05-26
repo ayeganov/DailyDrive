@@ -100,7 +100,7 @@ async def delete_chore(chore_id: int, chore_repo: ChoreRepository = Depends(get_
     return await chore_repo.delete(chore_id)
 
 
-@app.get("/protected-route", tags=["users"])
+@app.get("/api/v1/protected_route", tags=["users"])
 async def protected_route(user=Depends(current_active_user)):
     return {"message": f"Hello, {user.email}!"}
 
