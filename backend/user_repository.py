@@ -11,6 +11,7 @@ from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 #    SQLAlchemyBaseAccessTokenTableUUID,
 #)
 from sqlalchemy import Column, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.ext.asyncio import AsyncSession
 from password_validator import PasswordValidator
 
@@ -24,6 +25,7 @@ validator.min(8).max(20).uppercase().lowercase().digits()
 class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "user"
     name = Column(String, nullable=True)
+    chores = relationship("Chore", back_populates="user")
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):

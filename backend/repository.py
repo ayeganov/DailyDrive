@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Dict, TypeVar, Generic, Optional
+from typing import Iterable, List, Dict, TypeVar, Generic, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -13,12 +13,12 @@ class BaseRepository(Generic[T]):
 
     @property
     @abstractmethod
-    def model(self) -> T:
+    def model(self) -> type[T]:
         """
         This method should be implemented in the child class and return the SQLAlchemy model
         """
 
-    async def get_all(self) -> List[T]:
+    async def get_all(self) -> Iterable[T]:
         result = await self.session.execute(select(self.model))
         entities = result.scalars().all()
         return entities

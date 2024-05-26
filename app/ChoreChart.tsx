@@ -11,15 +11,18 @@ import { useAuth } from './AuthContext';
 
 const ChoreChart: React.FC = () => {
   const [chores, setChores] = useState<Chore[]>([]);
-  const { active_user, logout } = useAuth();
+  const { active_user, logout, user_initialized } = useAuth();
 
   useEffect(() => {
     const fetchChores = async () =>
     {
       try
       {
-        const response = await axios.get<Chore[]>('/backend/api/v1/chores');
-        setChores(response.data);
+        if(user_initialized)
+        {
+          const response = await axios.get<Chore[]>('/backend/api/v1/chores');
+          setChores(response.data);
+        }
       }
       catch (error)
       {
@@ -28,13 +31,13 @@ const ChoreChart: React.FC = () => {
     };
 
     fetchChores();
-  }, []);
+  }, [active_user, user_initialized]);
 
   const handleAddChore = (chore: Chore) => {
     setChores((prevChores) => [...prevChores, chore]);
   };
 
-  const handleStatusChange = async (id: number, day: Days) =>
+  const handle_chore_change = async (id: number, day: Days) =>
   {
     setChores((prevChores) =>
       prevChores.map((chore) =>
@@ -45,7 +48,7 @@ const ChoreChart: React.FC = () => {
     );
   };
 
-  const handleDeleteChore = async (id: number) =>
+  const handle_delete_chore = async (id: number) =>
   {
     await axios.delete(`/backend/api/v1/chores/${id}`);
     setChores((prevChores) => prevChores.filter((chore) => chore.id !== id));
@@ -87,8 +90,8 @@ const ChoreChart: React.FC = () => {
         {chores.map((chore) => (
           <ChoreRow key={chore.id}
                     chore={chore}
-                    onDelete={handleDeleteChore}
-                    onStatusChange={handleStatusChange} />
+                    onDelete={handle_delete_chore}
+                    onStatusChange={handle_chore_change} />
       ))}
       </div>
     </div>

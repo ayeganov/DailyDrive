@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<boolean>;
   logout: (username: string) => void;
   switch_user: (username: string) => void;
+  user_initialized: boolean;
 }
 
 
@@ -65,12 +66,14 @@ const restore_logged_users = (): Map<string, User> => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [users, setUsers] = useState<Map<string, User>>(restore_logged_users());
   const [active_user, setActiveUser] = useState<string | null>(null);
+  const [user_initialized, setUserInitialized] = useState(false);
 
   useEffect(() => {
     const current_active_user = users.get(active_user || '');
     if (current_active_user) {
       console.log("3 Setting axios token:", current_active_user.token);
       axios.defaults.headers.common.Authorization = `Bearer ${current_active_user.token}`;
+      setUserInitialized(true);
     }
   }, [active_user, users]);
 
@@ -112,14 +115,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (active_user === username) {
       setActiveUser(null);
     }
+
+    setUserInitialized(false);
   };
 
   const switch_user = (username: string) => {
+    setUserInitialized(false);
     setActiveUser(username);
   };
 
   return (
-    <AuthContext.Provider value={{ users, active_user, login, logout, switch_user }}>
+    <AuthContext.Provider value={{ users, active_user, login, logout, switch_user, user_initialized }}>
       {children}
     </AuthContext.Provider>
   );
