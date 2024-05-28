@@ -15,7 +15,7 @@ interface WeekdayCellProps
 const WeekdayCell: React.FC<WeekdayCellProps> = ({ day, color_class }) =>
 {
   return (
-    <div className={`${color_class} lucky-font text-white text-2xl rounded-t-2xl border-2 p-4 flex justify-center`}
+    <div className={`${color_class} bubblegum-sans-regular text-white text-3xl rounded-t-2xl border-2 p-4 flex justify-center`}
     >{day}</div>
   );
 };

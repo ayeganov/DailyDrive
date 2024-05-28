@@ -1,5 +1,7 @@
 from abc import abstractmethod
 from typing import Iterable, List, Dict, TypeVar, Generic, Optional
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -23,7 +25,7 @@ class BaseRepository(Generic[T]):
         entities = result.scalars().all()
         return entities
 
-    async def get_by_id(self, entity_id: int) -> Optional[T]:
+    async def get_by_id(self, entity_id: UUID) -> Optional[T]:
         result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
         entity = result.scalars().first()
         return entity if entity else None
@@ -35,7 +37,7 @@ class BaseRepository(Generic[T]):
         await self.session.refresh(entity)
         return entity
 
-    async def update(self, entity_id: int, updated_data: Dict) -> Optional[T]:
+    async def update(self, entity_id: UUID, updated_data: Dict) -> Optional[T]:
         result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
         entity = result.scalars().first()
         if entity:
@@ -46,7 +48,7 @@ class BaseRepository(Generic[T]):
             return entity
         return None
 
-    async def delete(self, entity_id: int) -> Optional[T]:
+    async def delete(self, entity_id: UUID) -> Optional[T]:
         result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
         entity = result.scalars().first()
         if entity:

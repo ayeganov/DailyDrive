@@ -13,6 +13,8 @@ interface AvatarCarouselProps
 }
 
 
+// TODO: Replace this stuff with this: https://www.npmjs.com/package/react-multi-carousel
+// or this: https://codepen.io/WillyW/pen/wZebow
 const AvatarCarousel: React.FC<AvatarCarouselProps> = ({ users, on_user_click }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 

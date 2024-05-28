@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import { Chore } from "./types";
+
 
 interface ChoreFormProps
 {
@@ -16,7 +18,7 @@ const ChoreForm: React.FC<ChoreFormProps> = ({ onAddChore }) =>
   {
     e.preventDefault();
     const newChore: Chore = {
-      id: Date.now(),
+      id: uuidv4(),
       name: choreName,
       statuses: {
         Monday: false,

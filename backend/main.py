@@ -1,28 +1,23 @@
 from contextlib import asynccontextmanager
+from uuid import UUID
 import logging
 import os
-from uuid import UUID, uuid4
 
-from dotenv import load_dotenv
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from chore_repository import ChoreRepository, get_chore_db
 from database import create_db_and_tables
+from settings import DailyDriveSettings
 from user_repository import auth_backend, current_active_user, fastapi_users, UserCreate, UserRead, UserUpdate
 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-load_dotenv()
-public_url: Optional[str] = os.getenv("BACKEND_PUBLIC_URL")
-assert public_url is not None, "PUBLIC_URL environment variable is not set"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,8 +26,9 @@ async def lifespan(app: FastAPI):
     yield
 
 
+settings = DailyDriveSettings()
 app = FastAPI(lifespan=lifespan, title="Daily Drive", version="0.1.0")
-app.mount(public_url,
+app.mount(settings.backend_public_url,
           StaticFiles(directory=os.path.join(os.path.dirname(__file__),
           "../public")),
           name="static")
@@ -72,7 +68,7 @@ app.include_router(
 
 
 class Chore(BaseModel):
-    id: int
+    id: UUID
     name: str
     statuses: Dict[str, bool]
     user_id: Optional[UUID] = None
@@ -95,7 +91,7 @@ async def add_chore(chore: Chore,
 
 
 @app.put("/api/v1/chores/{chore_id}", response_model=Chore, tags=["chores"])
-async def update_chore(chore_id: int,
+async def update_chore(chore_id: UUID,
                        updated_chore: Chore,
                        chore_repo: ChoreRepository = Depends(get_chore_db),
                        user=Depends(current_active_user)):
@@ -105,11 +101,16 @@ async def update_chore(chore_id: int,
 
 
 @app.delete("/api/v1/chores/{chore_id}", response_model=Chore, tags=["chores"])
-async def delete_chore(chore_id: int,
+async def delete_chore(chore_id: UUID,
                        chore_repo: ChoreRepository = Depends(get_chore_db),
                        _=Depends(current_active_user)):
     logger.info("Deleting a chore: %s", chore_id)
     return await chore_repo.delete(chore_id)
+
+
+@app.post("/api/v1/end_week", tags=["chores"])
+async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db)):
+    print("Ending the week")
 
 
 @app.get("/api/v1/protected_route", tags=["users"])

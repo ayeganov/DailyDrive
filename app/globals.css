@@ -9,6 +9,29 @@
   font-family: 'Luckiest Guy';
 }
 
+@font-face {
+  font-family: 'MatchaDalgonaRegular';
+  src: url('/static/fonts/MatchaDalgonaRegular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+@font-face {
+  font-family: 'SuperBubble';
+  src: url('/static/fonts/SuperBubble.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.matcha-font {
+  font-family: 'MatchaDalgonaRegular';
+}
+
+.superbubble-font {
+  font-family: 'SuperBubble';
+}
+
 
 .bubblegum-sans-regular {
   font-family: "Bubblegum Sans", sans-serif;
@@ -25,6 +48,7 @@
   min-height: 100vh;
 }
 
+
 #login-register {
   background-image: url('/images/login-bg-1.jpeg');
   background-position: center;
@@ -32,4 +56,3 @@
   background-size: cover;
   min-height: 100vh;
 }
-

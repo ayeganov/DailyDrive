@@ -19,7 +19,7 @@ const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete }) 
 
   const days: Days[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  const handleCheckboxChange = async (day: Days) =>
+  const handle_chore_click = async (day: Days) =>
   {
     const updatedChore = {
       ...chore,
@@ -55,14 +55,16 @@ const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete }) 
 
   return (
     <div className="chore-row">
-      <span className={`text-white text-2xl font-bold rounded-2xl border-2 p-4 flex justify-left items-center bg-blue-400`} onClick={() => setIsModalOpen(true)} style={{ cursor: 'pointer' }}>
+      <span className={`text-white text-2xl font-bold rounded-2xl border-2 p-4 flex justify-left items-center bg-blue-400 matcha-font`}
+            onClick={() => setIsModalOpen(true)}
+            style={{ cursor: 'pointer' }}>
         {chore.name}
       </span>
       {days.map((day) => (
         <ChoreItem
           key={day}
           completed={chore.statuses[day]}
-          onClick={() => handleCheckboxChange(day)}
+          onClick={() => handle_chore_click(day)}
         />
       ))}
       <ChoreModal

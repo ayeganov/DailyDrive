@@ -21,6 +21,7 @@ pylint = "^3.2.2"
 password-validator = "^1.0"
 pyjwt = "^2.8.0"
 alembic = "^1.13.1"
+pydantic-settings = "^2.2.1"
 
 
 [build-system]

@@ -5,27 +5,20 @@ from fastapi import Depends, Request
 from fastapi_users import FastAPIUsers, BaseUserManager, InvalidPasswordException, UUIDIDMixin, schemas
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
 #from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
+from fastapi_users.db import SQLAlchemyUserDatabase
 #from fastapi_users_db_sqlalchemy.access_token import (
 #    SQLAlchemyAccessTokenDatabase,
 #    SQLAlchemyBaseAccessTokenTableUUID,
 #)
-from sqlalchemy import Column, String
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.asyncio import AsyncSession
 from password_validator import PasswordValidator
 
-from database import Base, get_async_session
+from database import get_async_session
+from models import User
 
 
 validator = PasswordValidator()
 validator.min(8).max(20).uppercase().lowercase().digits()
-
-
-class User(SQLAlchemyBaseUserTableUUID, Base):
-    __tablename__ = "user"
-    name = Column(String, nullable=True)
-    chores = relationship("Chore", back_populates="user")
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
@@ -85,7 +78,7 @@ async def get_user_db(session: AsyncSession = Depends(get_async_session)):
 
 
 def get_jwt_strategy():
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+    return JWTStrategy(secret=SECRET, lifetime_seconds=3600 * 24 * 10)
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):

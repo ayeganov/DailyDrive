@@ -1,6 +1,6 @@
 export interface Chore
 {
-  id: number;
+  id: string;
   name: string;
   statuses: { [key: string]: boolean };
   user_id?: string;

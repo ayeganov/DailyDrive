@@ -68,14 +68,13 @@ const ChoreChart: React.FC = () => {
   return (
     <div id="chore-chart">
       <div className="flex flex-row justify-between">
-        <div className="bubblegum-sans-regular text-8xl p-8 " style={{WebkitTextStroke: "5px white"}}>Daily Drive</div>
+        <div className="superbubble-font text-8xl p-8 " style={{WebkitTextStroke: "5px white"}}>Daily Drive</div>
         <div className="text-center sm:text-right whitespace-nowrap">
           <div onClick={handle_log_out} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
             <span className="inline-block ml-1 lucky-font text-zinc-200">Logout</span>
           </div>
         </div>
       </div>
-      <ChoreForm onAddChore={handleAddChore} />
       <div className="chore-chart">
         <div className="header">
           <WeekdayCell key="Chore" day="Chore" color_class='bg-orange-500' />
@@ -94,6 +93,7 @@ const ChoreChart: React.FC = () => {
                     onStatusChange={handle_chore_change} />
       ))}
       </div>
+      <ChoreForm onAddChore={handleAddChore} />
     </div>
   );
 };
