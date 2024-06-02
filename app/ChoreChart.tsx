@@ -94,6 +94,8 @@ const ChoreChart: React.FC = () => {
                     onStatusChange={handle_chore_change} />
       ))}
       </div>
+      <ChoreForm onAddChore={handleAddChore} />
+
     </div>
   );
 };

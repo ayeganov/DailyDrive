@@ -1,5 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
+@font-face {
+  font-family: 'Dulce Boy';
+  font-style: normal;
+  font-weight: normal;
+  src: local('Dulce Boy'), url('/fonts/Dulce-Boy.ttf') format('truetype');
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,6 +15,9 @@
   font-family: 'Luckiest Guy';
 }
 
+.dulce-font {
+  font-family: 'Dulce Boy';
+}
 
 .bubblegum-sans-regular {
   font-family: "Bubblegum Sans", sans-serif;
@@ -18,11 +27,12 @@
 
 
 #chore-chart {
-  background-image: url('/images/background-1.jpeg');
+  background-image: url('/images/app-bg.png');
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
   min-height: 100vh;
+  padding: 30px
 }
 
 #login-register {
@@ -33,3 +43,58 @@
   min-height: 100vh;
 }
 
+
+.weekday-cell {
+  /* background-color: transparent; */
+  padding-top: 30px;
+  /* background-image: linear-gradient(#fff, #f5f5fa); */
+  border: 0 solid #003dff;
+  border-top-right-radius: 30px;
+  border-top-left-radius: 30px;
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  color: white;
+  box-shadow: rgba(37, 44, 97, .15) 0 6px 11px 0, rgba(93, 100, 148, .2) 0 2px 6px 0, inset 0 9px 6px -6px white;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-block;
+  font-weight: 600;
+  margin: 4px;
+  padding: 24px 24px 16px 24px;
+  text-align: center;
+  text-decoration: inherit;
+  text-wrap: nowrap;
+  transition: all .2s ease-out;
+  transition-behavior: normal;
+  white-space-collapse: collapse;
+  line-height: 1.15;
+}
+
+
+
+.weekday-cell:after, .weekday-cell:before, .div-flex-items-center-justify-center:after, .div-flex-items-center-justify-center:before, .span-flex-items-center-h-16-w-auto-mr-8-py-2-flex-grow-0-flex-shrink-0-fill-current:after, .span-flex-items-center-h-16-w-auto-mr-8-py-2-flex-grow-0-flex-shrink-0-fill-current:before, .svg-block-h-full:after, .svg-block-h-full:before {
+  border: 0 solid #003dff;
+  box-sizing: border-box;
+}
+
+.weekday-cell:hover {
+  box-shadow: rgba(37, 44, 97, .15) 0 8px 22px 0, rgba(93, 100, 148, .2) 0 4px 6px 0, inset 0 12px 6px -6px white;
+
+}
+
+.weekday-cell:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+.daily-drive-title {
+  
+  text-shadow: 0 0.1em 20px rgba(0, 0, 0, .2), 0.05em -0.03em 0 white,
+    0.05em 0.005em 0 white, 0em 0.08em 0 white,
+    0.05em 0.08em 0 white, 0px -0.03em 0 white,
+    -0.03em -0.03em 0 white, -0.03em 0.08em 0 white, -0.03em 0 0 white;
+  span {
+    transform: scale(0.9);
+    display: inline-block;
+  }
+}
