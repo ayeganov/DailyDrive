@@ -1,10 +1,12 @@
 from datetime import datetime, UTC, timedelta, date
+from typing import List, Tuple
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
-from sqlalchemy.orm import DeclarativeBase
+from pydantic import BaseModel, Field, conlist
 from sqlalchemy import Column, DateTime, ForeignKey, String, JSON
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import Date, Integer, Float
 
@@ -67,3 +69,15 @@ class Reward(Base):
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
     user = relationship('User', back_populates='rewards')
+
+
+class ChoreTable(BaseModel):
+    table: conlist(conlist(str, min_length=7, max_length=7))
+
+
+class WeekScores(BaseModel):
+    horizontal_X_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
+    horizontal_O_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
+    vertical_X_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
+    full_X_columns: List[int] = Field(default_factory=list)
+    total_points: int = 0

@@ -2,7 +2,7 @@ export interface Chore
 {
   id: string;
   name: string;
-  statuses: { [key: string]: boolean };
+  statuses: { [key: string]: string };
   user_id?: string;
 }
 

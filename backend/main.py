@@ -11,6 +11,8 @@ from typing import List, Dict, Optional
 
 from chore_repository import ChoreRepository, get_chore_db
 from database import create_db_and_tables
+from models import ChoreTable
+from reward_calculator import find_regularities_with_locations
 from settings import DailyDriveSettings
 from user_repository import auth_backend, current_active_user, fastapi_users, UserCreate, UserRead, UserUpdate
 
@@ -70,7 +72,7 @@ app.include_router(
 class Chore(BaseModel):
     id: UUID
     name: str
-    statuses: Dict[str, bool]
+    statuses: Dict[str, str]
     user_id: Optional[UUID] = None
 
 
@@ -111,6 +113,13 @@ async def delete_chore(chore_id: UUID,
 @app.post("/api/v1/end_week", tags=["chores"])
 async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db)):
     print("Ending the week")
+
+
+@app.get("/api/v1/get_scores", tags=["chores"])
+async def get_scores(chore_table: ChoreTable):
+    print("Getting scores")
+    print(chore_table)
+    return find_regularities_with_locations(chore_table)
 
 
 @app.get("/api/v1/protected_route", tags=["users"])

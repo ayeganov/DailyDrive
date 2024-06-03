@@ -21,13 +21,13 @@ const ChoreForm: React.FC<ChoreFormProps> = ({ onAddChore }) =>
       id: uuidv4(),
       name: choreName,
       statuses: {
-        Monday: false,
-        Tuesday: false,
-        Wednesday: false,
-        Thursday: false,
-        Friday: false,
-        Saturday: false,
-        Sunday: false,
+        Monday: "_",
+        Tuesday: "_",
+        Wednesday: "_",
+        Thursday: "_",
+        Friday: "_",
+        Saturday: "_",
+        Sunday: "_",
       },
     };
 

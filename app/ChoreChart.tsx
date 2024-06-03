@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import WeekdayCell from './WeekdayCell';
 import axios from 'axios';
 import { Chore, Days } from './types';
+import ColoredText from './ColoredText';
 import Link from 'next/link';
 import { useAuth } from './AuthContext';
 
@@ -37,18 +38,18 @@ const ChoreChart: React.FC = () => {
     setChores((prevChores) => [...prevChores, chore]);
   };
 
-  const handle_chore_change = async (id: number, day: Days) =>
+  const handle_chore_change = async (id: string, new_chore: Chore) =>
   {
     setChores((prevChores) =>
       prevChores.map((chore) =>
         chore.id === id
-          ? { ...chore, statuses: { ...chore.statuses, [day]: !chore.statuses[day] } }
+          ? new_chore
           : chore
       )
     );
   };
 
-  const handle_delete_chore = async (id: number) =>
+  const handle_delete_chore = async (id: string) =>
   {
     await axios.delete(`/backend/api/v1/chores/${id}`);
     setChores((prevChores) => prevChores.filter((chore) => chore.id !== id));
@@ -68,7 +69,7 @@ const ChoreChart: React.FC = () => {
   return (
     <div id="chore-chart">
       <div className="flex flex-row justify-between">
-        <div className="superbubble-font text-8xl p-8 " style={{WebkitTextStroke: "5px white"}}>Daily Drive</div>
+        <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "5px white"}} text="Daily Drive" />
         <div className="text-center sm:text-right whitespace-nowrap">
           <div onClick={handle_log_out} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
             <span className="inline-block ml-1 lucky-font text-zinc-200">Logout</span>
