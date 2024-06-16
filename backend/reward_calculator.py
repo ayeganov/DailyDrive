@@ -4,6 +4,9 @@ from models import ChoreTable, WeekScores
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 
+FULL_COLUMN_MIN_HEIGHT = 4
+
+
 def find_regularities_with_locations(chore_table: ChoreTable) -> WeekScores:
     table = chore_table.table
     scores = WeekScores()
@@ -44,7 +47,7 @@ def find_regularities_with_locations(chore_table: ChoreTable) -> WeekScores:
 
     # Full column search
     for c in range(cols):
-        if all(table[r][c] == 'X' for r in range(rows)):
+        if all(table[r][c] == 'X' for r in range(rows)) and rows >= FULL_COLUMN_MIN_HEIGHT:
             scores.full_X_columns.append(c)
 
     return scores

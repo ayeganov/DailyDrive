@@ -39,6 +39,7 @@ const get_users_from_local_storage = (): User[] => {
   return [];
 };
 
+
 const is_token_expired = (token: string): boolean => {
   const decoded_token = jwtDecode(token);
   if (decoded_token === undefined) {

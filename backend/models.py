@@ -1,5 +1,5 @@
 from datetime import datetime, UTC, timedelta, date
-from typing import List, Tuple
+from typing import Annotated, List, Tuple
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
@@ -72,7 +72,7 @@ class Reward(Base):
 
 
 class ChoreTable(BaseModel):
-    table: conlist(conlist(str, min_length=7, max_length=7))
+    table: List[Annotated[List[str], Field(min_length=7, max_length=7)]]
 
 
 class WeekScores(BaseModel):

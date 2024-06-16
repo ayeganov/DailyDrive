@@ -7,6 +7,7 @@ import { useAuth } from './AuthContext';
 import LoginPage from './login/page';
 import { User } from './types';
 import AvatarCarousel from './UserAvatars';
+import { ConsistencyProvider, } from './ConsistencyContext';
 
 
 const App: React.FC = () =>
@@ -39,7 +40,11 @@ const App: React.FC = () =>
         </div>
       )}
       {show_login && <LoginPage />}
-      {show_chore_chart && <ChoreChart />}
+      {show_chore_chart && (
+        <ConsistencyProvider>
+          <ChoreChart />
+        </ConsistencyProvider>
+      )}
     </div>
   );
 };

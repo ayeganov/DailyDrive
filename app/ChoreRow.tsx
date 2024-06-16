@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import axios from "axios";
 import ChoreModal from './ChoreModal';
 import ChoreItem from './ChoreItem';
-import { Chore, Days } from './types';
+import { Chore, Days, DAYS } from './types';
+import { useAnimation } from './AnimationContext';
 
-
-const DAYS: Days[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 interface ChoreRowProps
 {
   chore: Chore;
   onStatusChange: (id: string, new_chore: Chore) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  index: number;
 }
 
 
@@ -27,18 +27,23 @@ function get_current_week_day(): Days
   const current_date = new Date();
   let day_index = current_date.getDay();
   day_index = (day_index + 6) % 7;
-  console.info('day_index:', day_index);
   return DAYS[day_index];
 }
 
 
-const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete }) =>
+const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete, index }) =>
 {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const { isAnimating } = useAnimation();
 
   const handle_chore_click = async (day: Days) =>
   {
+    if(isAnimating)
+    {
+      console.info('Animation in progress, skipping click: ', isAnimating);
+      return;
+    }
+
     const current_day = get_current_week_day();
     const previous_days = get_previous_days(current_day);
     const current_status = chore.statuses[day];
@@ -48,7 +53,6 @@ const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete }) 
     const is_marking_today = current_status === "_";
     const is_marking_previous = previous_days.includes(day);
     const is_future = !is_today && !is_marking_previous;
-
 
     if(is_today)
     {
@@ -60,7 +64,9 @@ const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete }) 
     }
     else if(is_future)
     {
+      new_status = current_status === "X" ? "O" : "X";
       new_status = "_";
+      return;
     }
 
     const updatedChore = {
@@ -102,11 +108,14 @@ const ChoreRow: React.FC<ChoreRowProps> = ({ chore, onStatusChange, onDelete }) 
             style={{ cursor: 'pointer' }}>
         {chore.name}
       </span>
-      {DAYS.map((day) => (
+      {DAYS.map((day, y_index) => (
         <ChoreItem
           key={day}
-          completed={chore.statuses[day]}
+          chore={chore}
           onClick={() => handle_chore_click(day)}
+          completed={chore.statuses[day]}
+          x={index}
+          y={y_index}
         />
       ))}
       <ChoreModal

@@ -115,7 +115,7 @@ async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db)):
     print("Ending the week")
 
 
-@app.get("/api/v1/get_scores", tags=["chores"])
+@app.post("/api/v1/get_scores", tags=["chores"])
 async def get_scores(chore_table: ChoreTable):
     print("Getting scores")
     print(chore_table)
