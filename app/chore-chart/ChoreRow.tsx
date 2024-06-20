@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import axios from "axios";
 import ChoreModal from './ChoreModal';
 import ChoreItem from './ChoreItem';
-import { Chore, Days, DAYS } from './types';
-import { useAnimation } from './AnimationContext';
+import { Chore, Days, DAYS } from '../types';
+import { useAnimation } from '../AnimationContext';
 
 
 interface ChoreRowProps

@@ -3,7 +3,7 @@
 import axios from 'axios';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-interface ConsistencyContextType
+interface ConsistencyContextProps
 {
   fullXColumns: number[];
   horizontalOTriplets: number[][][];
@@ -15,7 +15,7 @@ interface ConsistencyContextType
 };
 
 
-const ConsistencyContext = createContext<ConsistencyContextType | undefined>(undefined);
+const ConsistencyContext = createContext<ConsistencyContextProps | undefined>(undefined);
 
 
 export const ConsistencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
@@ -57,3 +57,5 @@ export const useConsistency = () =>
   }
   return context;
 };
+
+export { ConsistencyContext };

@@ -1,10 +1,12 @@
-import React, { useEffect, useReducer, } from 'react';
-import './App.css';
+"use client";
 
-import { Chore, } from './types';
-import { useConsistency } from './ConsistencyContext';
-import icon_reducer, { IconState, IconAction } from './icon_reducer';
-import { useAnimation } from './AnimationContext';
+import React, { useEffect, useReducer, } from 'react';
+import '../App.css';
+
+import { Chore, } from '../types';
+import { useConsistency } from '../ConsistencyContext';
+import icon_reducer, { IconState, IconAction } from '../icon_reducer';
+import { useAnimation } from '../AnimationContext';
 
 
 interface ChoreItemProps

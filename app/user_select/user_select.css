@@ -1,0 +1,24 @@
+.container {
+  max-width: 1200px;
+  padding: 2rem;
+}
+
+.carousel .react-multi-carousel-list {
+  padding: 2rem 0;
+}
+
+.carousel .react-multi-carousel-item {
+  display: flex;
+  justify-content: center;
+  padding: 0 0.5rem;
+}
+
+.carousel button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.carousel button:focus {
+  outline: none;
+}

@@ -56,3 +56,12 @@
   background-size: cover;
   min-height: 100vh;
 }
+
+
+#user-selection {
+  background-image: url('/images/login-bg-1.jpeg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+}

@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const save_users_to_local_storage = (users: Map<string, User>) => {
   if (typeof window !== 'undefined') {
     const usersArray = Array.from(users.values());
-    console.log("Saving users to local storage:", usersArray);
+//    console.log("Saving users to local storage:", usersArray);
     localStorage.setItem('users', JSON.stringify(usersArray));
   }
 };
@@ -32,7 +32,7 @@ const save_users_to_local_storage = (users: Map<string, User>) => {
 const get_users_from_local_storage = (): User[] => {
   if (typeof window !== 'undefined') {
     const stored_users = localStorage.getItem('users');
-    console.log("Stored users:", stored_users);
+//    console.log("Stored users:", stored_users);
     return stored_users ? JSON.parse(stored_users) : [];
   }
   console.log("No window object, returning empty array.");
@@ -59,7 +59,7 @@ const is_token_expired = (token: string): boolean => {
 const restore_logged_users = (): Map<string, User> => {
   const users = get_users_from_local_storage();
   const valid_users = users.filter((user) => !is_token_expired(user.token));
-  console.log("Valid users:", valid_users);
+//  console.log("Valid users:", valid_users);
   return new Map(valid_users.map(user => [user.username, user]));
 };
 
@@ -72,19 +72,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const current_active_user = users.get(active_user || '');
     if (current_active_user) {
-      console.log("3 Setting axios token:", current_active_user.token);
+//      console.log("3 Setting axios token:", current_active_user.token);
       axios.defaults.headers.common.Authorization = `Bearer ${current_active_user.token}`;
       setUserInitialized(true);
     }
   }, [active_user, users]);
 
   useEffect(() => {
-    console.info('2 Saving users to long term storage:', users);
+//    console.info('2 Saving users to long term storage:', users);
     save_users_to_local_storage(users);
   }, [users]);
 
   const login = async (username: string, password: string) => {
-    console.log('Logging in with:', username, password);
+//    console.log('Logging in with:', username, password);
     try {
       const formData = new FormData();
       formData.set('username', username);
@@ -93,6 +93,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const loginInfo = await axios.post('/backend/auth/jwt/login', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+
+//      console.info("login info: {}", loginInfo);
 
       const auth_token = loginInfo.data.access_token;
       const updated_users = new Map(users);

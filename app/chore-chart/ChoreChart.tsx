@@ -1,29 +1,34 @@
 "use client";
+
+import { useRouter } from 'next/navigation';
 import ChoreForm from './ChoreForm';
 import ChoreRow from './ChoreRow';
 import React, { useState, useEffect } from 'react';
 import WeekdayCell from './WeekdayCell';
 import axios from 'axios';
-import { Chore, Days, DAYS } from './types';
-import ColoredText from './ColoredText';
+import { Chore, DAYS } from '../types';
+import ColoredText from '../ColoredText';
 import Link from 'next/link';
-import { useAuth } from './AuthContext';
-import { useConsistency } from './ConsistencyContext';
-import { AnimationProvider } from './AnimationContext';
+import { useAuth } from '../AuthContext';
+import { useConsistency } from '../ConsistencyContext';
+import { AnimationProvider } from '../AnimationContext';
 
 
 const ChoreChart: React.FC = () => {
   const [chores, setChores] = useState<Chore[]>([]);
   const { active_user, logout, user_initialized } = useAuth();
   const { fetchConsistencyData } = useConsistency();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchChores = async () =>
     {
       try
       {
+        console.log('Fetching chores...');
         if(user_initialized)
         {
+          console.log('Fetching chores for user:', active_user);
           const response = await axios.get<Chore[]>('/backend/api/v1/chores');
           setChores(response.data);
           update_consistency_data(response.data);
@@ -73,13 +78,16 @@ const ChoreChart: React.FC = () => {
     }
     console.log('Logging out user:', active_user);
     logout(active_user);
+    router.push('/');
   };
 
   return (
     <AnimationProvider>
       <div id="chore-chart">
         <div className="flex flex-row justify-between">
-          <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "5px white"}} text="Daily Drive" />
+          <Link href="/user_select">
+            <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "5px white"}} text="Daily Drive" />
+          </Link>
           <div className="text-center sm:text-right whitespace-nowrap">
             <div onClick={handle_log_out} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
               <span className="inline-block ml-1 lucky-font text-zinc-200">Logout</span>
