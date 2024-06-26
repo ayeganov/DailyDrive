@@ -14,7 +14,7 @@ interface AuthContextType {
   active_user: string | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: (username: string) => void;
-  switch_user: (username: string) => void;
+  switch_user: (username: string|null) => void;
   user_initialized: boolean;
 }
 
@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserInitialized(false);
   };
 
-  const switch_user = (username: string) => {
+  const switch_user = (username: string | null) => {
     setUserInitialized(false);
     setActiveUser(username);
   };

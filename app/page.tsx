@@ -42,7 +42,7 @@ const App: React.FC = () =>
         router.push('/chore-chart');
       }
     }
-  }, [hydrated, active_user, users, router]);
+  }, [hydrated, active_user, users]);
 
   return null;
 };

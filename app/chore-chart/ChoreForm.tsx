@@ -42,7 +42,7 @@ const ChoreForm: React.FC<ChoreFormProps> = ({ onAddChore }) => {
   return (
     <form onSubmit={handleSubmit} className=" flex items-center">
       <input
-        className=" bg-transparent rounded-md p-2 outline-none border-indigo-300 border-2 placeholder:text-indigo-400 text-orange-500"
+        className="bg-white rounded-md p-2 outline-none border-purple-400 border-2 placeholder:text-gray-400 text-purple-700"
         type="text"
         id="chore_name"
         value={choreName}

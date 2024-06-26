@@ -29,7 +29,6 @@ const UserSelection: React.FC = () =>
             <span className="inline-block ml-1 lucky-font">Who Are You?</span>
           </div>
         </div>
-     
 
       </div>
       <AvatarCarousel users={Array.from(users.values())} on_user_click={handle_user_choice} />

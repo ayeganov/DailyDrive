@@ -66,10 +66,11 @@ function completed_to_icon(completed: string, is_perfect: boolean, is_triplet: b
   }
 }
 
+
 const ChoreItem: React.FC<ChoreItemProps> = ({ chore, onClick, completed, x, y }) =>
 {
   const { fullXColumns, horizontalOTriplets, horizontalXTriplets, verticalXTriplets, loading } = useConsistency();
-  const [state, dispatch] = useReducer(icon_reducer, initial_state);
+  const [ state, dispatch ] = useReducer(icon_reducer, initial_state);
   const { setAnimating } = useAnimation();
 
   useEffect(() => {

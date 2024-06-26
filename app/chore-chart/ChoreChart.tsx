@@ -15,33 +15,35 @@ import { AnimationProvider } from '../AnimationContext';
 
 
 const ChoreChart: React.FC = () => {
-  const [chores, setChores] = useState<Chore[]>([]);
-  const { active_user, logout, user_initialized } = useAuth();
+  const [ chores, setChores ] = useState<Chore[]>([]);
+  const { active_user, logout, user_initialized, switch_user } = useAuth();
   const { fetchConsistencyData } = useConsistency();
   const router = useRouter();
 
   useEffect(() => {
-    const fetchChores = async () =>
+    if (chores.length === 0)
     {
-      try
-      {
-        console.log('Fetching chores...');
-        if(user_initialized)
-        {
-          console.log('Fetching chores for user:', active_user);
-          const response = await axios.get<Chore[]>('/backend/api/v1/chores');
-          setChores(response.data);
-          update_consistency_data(response.data);
-        }
-      }
-      catch (error)
-      {
-        console.error('Error fetching chores:', error);
-      }
-    };
+      fetchChores();
+    }
+  }, [user_initialized]);
 
-    fetchChores();
-  }, [active_user, user_initialized]);
+  const fetchChores = async () =>
+  {
+    try
+    {
+      if(user_initialized)
+      {
+        console.log('Fetching chores for user:', active_user);
+        const response = await axios.get<Chore[]>('/backend/api/v1/chores');
+        setChores(response.data);
+        update_consistency_data(response.data);
+      }
+    }
+    catch (error)
+    {
+      console.error('Error fetching chores:', error);
+    }
+  }
 
   const handleAddChore = (chore: Chore) => {
     setChores((prevChores) => [...prevChores, chore]);
@@ -81,12 +83,17 @@ const ChoreChart: React.FC = () => {
     router.push('/');
   };
 
+  const go_back_to_user_select = () =>
+  {
+    switch_user(null);
+  }
+
   return (
     <AnimationProvider>
       <div id="chore-chart">
         <div className="flex flex-row justify-between">
-          <Link href="/user_select">
-            <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "5px white"}} text="Daily Drive" />
+          <Link href="/">
+            <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "5px white"}} text="Daily Drive" onClick={() => go_back_to_user_select()}/>
           </Link>
           <div className="text-center sm:text-right whitespace-nowrap">
             <div onClick={handle_log_out} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
