@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import Image from "next/image";
 import { User } from '../types';
 import { IoIosArrowDropright, IoIosArrowDropleft } from "react-icons/io";
@@ -41,21 +41,6 @@ interface UserCardProps {
   on_user_click: (user: User) => void;
 }
 
-
-//const UserCard: React.FC<UserCardProps> = ({ user, on_user_click }) => {
-//  return (
-//    <div className="card glass" >
-//      <div className="avatar items-center" onClick={() => on_user_click(user.username)}>
-//        <div className='w-48 rounded-xl'>
-//          <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" />
-//        </div>
-//      </div>
-//      <div className="card-body">
-//        <h2 className='card-title'>{user.username}</h2>
-//      </div>
-//    </div>
-//  );
-//};
 
 const UserCard: React.FC<UserCardProps> = ({ user, on_user_click }) => {
   return (
