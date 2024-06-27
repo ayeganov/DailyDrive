@@ -14,7 +14,7 @@ from database import create_db_and_tables
 from models import ChoreTable
 from reward_calculator import find_regularities_with_locations
 from settings import DailyDriveSettings
-from user_repository import auth_backend, current_active_user, fastapi_users, UserCreate, UserRead, UserUpdate
+from user_repository import auth_backend, current_active_user, fastapi_users, UserCreate, UserRead, UserUpdate, get_current_user
 
 
 logging.basicConfig(level=logging.INFO)
@@ -76,6 +76,15 @@ class Chore(BaseModel):
     user_id: Optional[UUID] = None
 
 
+class UiUser(BaseModel):
+    id: UUID
+    email: str
+    name: str
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
+    is_verified: Optional[bool] = None
+
+
 @app.get("/api/v1/chores", response_model=List[Chore], tags=["chores"])
 async def get_chores(chore_repo: ChoreRepository = Depends(get_chore_db),
                      user=Depends(current_active_user)):
@@ -126,6 +135,10 @@ async def get_scores(chore_table: ChoreTable):
 async def protected_route(user=Depends(current_active_user)):
     return {"message": f"Hello, {user.email}!"}
 
+
+@app.get("/api/v1/users/me", tags=["users"])
+async def get_me(user=Depends(get_current_user)) -> UiUser:
+    return user
 
 
 def main():

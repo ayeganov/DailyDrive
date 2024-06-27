@@ -53,9 +53,9 @@
   background-image: url('/images/app-bg.png');
   background-position: center;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: 100% 100%;
   min-height: 100vh;
-  padding: 30px
+  padding: 30px;
 }
 
 

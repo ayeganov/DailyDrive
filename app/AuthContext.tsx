@@ -7,6 +7,7 @@ import { jwtDecode } from 'jwt-decode';
 interface User {
   username: string;
   token: string;
+  email: string;
 }
 
 interface AuthContextType {
@@ -94,11 +95,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-//      console.info("login info: {}", loginInfo);
-
       const auth_token = loginInfo.data.access_token;
+      const user_response = await axios.get('/backend/api/v1/users/me', {
+        headers: { Authorization: `Bearer ${auth_token}` },
+      });
+
+      if (user_response.status !== 200) {
+        console.error('Error logging in:', user_response);
+        return false;
+      }
+
+      const current_user = user_response.data;
       const updated_users = new Map(users);
-      updated_users.set(username, { username, token: auth_token });
+      updated_users.set(current_user.email, { username: current_user.name, token: auth_token, email: current_user.email});
 
       setUsers(updated_users);
       setActiveUser(username);

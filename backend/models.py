@@ -3,7 +3,7 @@ from typing import Annotated, List, Tuple
 import uuid
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
-from pydantic import BaseModel, Field, conlist
+from pydantic import BaseModel, Field
 from sqlalchemy import Column, DateTime, ForeignKey, String, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase

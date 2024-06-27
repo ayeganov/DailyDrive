@@ -95,4 +95,9 @@ auth_backend = AuthenticationBackend(name="jwt",
 
 fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])
 
+
 current_active_user = fastapi_users.current_user(active=True)
+
+
+async def get_current_user(user: User = Depends(current_active_user)):
+    return {"id": str(user.id), "email": user.email, "name": user.name}

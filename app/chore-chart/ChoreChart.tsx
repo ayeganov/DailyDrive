@@ -1,5 +1,6 @@
 "use client";
 
+import assert from 'assert';
 import { useRouter } from 'next/navigation';
 import ChoreForm from './ChoreForm';
 import ChoreRow from './ChoreRow';
@@ -12,6 +13,7 @@ import Link from 'next/link';
 import { useAuth } from '../AuthContext';
 import { useConsistency } from '../ConsistencyContext';
 import { AnimationProvider } from '../AnimationContext';
+import UserStatsCard from './UserStatsCard';
 
 
 const ChoreChart: React.FC = () => {
@@ -21,10 +23,12 @@ const ChoreChart: React.FC = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (chores.length === 0)
+    if(active_user === null)
     {
-      fetchChores();
+      router.push('/');
+      return;
     }
+    fetchChores();
   }, [user_initialized]);
 
   const fetchChores = async () =>
@@ -88,6 +92,25 @@ const ChoreChart: React.FC = () => {
     switch_user(null);
   }
 
+  if(active_user === null)
+  {
+    return <span className="loading loading-infinity loading-lg"></span>;
+  }
+
+  assert(active_user !== null, 'Active user must be set to render ChoreChart');
+
+  const userData = {
+    avatarUrl: "/path-to-user-avatar.jpg",
+    name: active_user,
+    totalPoints: 1234,
+    gameTime: "2h 30m",
+    pendingGameTime: "+30m",
+    tvTime: "1h 45m",
+    pendingTvTime: "-15m",
+    pendingPoints: 50,
+    dollarEquivalent: 12.5
+  };
+
   return (
     <AnimationProvider>
       <div id="chore-chart">
@@ -95,6 +118,7 @@ const ChoreChart: React.FC = () => {
           <Link href="/">
             <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "5px white"}} text="Daily Drive" onClick={() => go_back_to_user_select()}/>
           </Link>
+          <UserStatsCard {...userData} />
           <div className="text-center sm:text-right whitespace-nowrap">
             <div onClick={handle_log_out} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
               <span className="inline-block ml-1 lucky-font text-zinc-200">Logout</span>
