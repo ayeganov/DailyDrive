@@ -11,6 +11,7 @@ const LoginPage: React.FC = () => {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
   const [error, setError] = useState('');
   const { login } = useAuth();
 

@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const publicUrl = process.env.NEXT_PUBLIC_PUBLIC_URL;
-console.log('publicUrl', publicUrl);
+
 const nextConfig = {
   async rewrites() {
     return [
@@ -21,10 +21,19 @@ const nextConfig = {
   webpack: (config, { dev }) => {
     if (dev || process.env.ENABLE_SOURCE_MAPS === 'true')
     {
-      console.log('Enabling source maps');
       config.devtool = 'source-map';
     }
     return config;
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "img.daisyui.com",
+        port: "",
+        pathname: "/images/stock/**",
+      }
+    ]
   }
 };
 

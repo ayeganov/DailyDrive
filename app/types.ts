@@ -1,8 +1,9 @@
 export interface Chore
 {
-  id: number;
+  id: string;
   name: string;
-  statuses: { [key: string]: boolean };
+  statuses: { [key: string]: string };
+  user_id?: string;
 }
 
 
@@ -14,3 +15,4 @@ export interface User
 
 
 export type Days = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+export const DAYS: Days[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

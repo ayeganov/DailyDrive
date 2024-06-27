@@ -1,23 +1,13 @@
-from typing import Optional, AsyncGenerator
-import os
+from typing import AsyncGenerator
 
-from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase
 
+from settings import DailyDriveSettings
 
-load_dotenv()
+from models import Base, Chore, ChoreHistory, User, Reward
 
-
-class Base(DeclarativeBase):
-    pass
-
-
-database_url: Optional[str] = os.getenv("DATABASE_URL")
-assert database_url is not None, "DATABASE_URL environment variable is not set"
-
-
-engine = create_async_engine(database_url)
+settings = DailyDriveSettings()
+engine = create_async_engine(settings.database_url)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
 
