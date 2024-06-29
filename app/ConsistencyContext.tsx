@@ -1,7 +1,8 @@
 "use client";
 
 import axios from 'axios';
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+
 
 interface ConsistencyContextProps
 {
@@ -10,6 +11,8 @@ interface ConsistencyContextProps
   horizontalXTriplets: number[][][];
   verticalXTriplets: number[][][];
   totalPoints: number;
+  totalMinutes: number;
+  moneyEquivalent: number;
   fetchConsistencyData: (statuses: string[][]) => void;
   loading: boolean;
 };
@@ -25,6 +28,8 @@ export const ConsistencyProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [horizontalXTriplets, setHorizontalXTriplets] = useState<number[][][]>([]);
   const [verticalXTriplets, setVerticalXTriplets] = useState<number[][][]>([]);
   const [totalPoints, setTotalPoints] = useState<number>(0);
+  const [totalMinutes, setTotalMinutes] = useState<number>(0);
+  const [moneyEquivalent, setMoneyEquivalent] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchConsistencyData = async (statuses: string[][]) =>
@@ -37,11 +42,22 @@ export const ConsistencyProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setHorizontalXTriplets(data.horizontal_X_triplets);
     setVerticalXTriplets(data.vertical_X_triplets);
     setTotalPoints(data.total_points);
+    setTotalMinutes(data.total_minutes);
+    setMoneyEquivalent(data.money_equivalent);
+    console.log('Consistency data:', data);
     setLoading(false);
   };
 
   return (
-    <ConsistencyContext.Provider value={{ fullXColumns, horizontalOTriplets, horizontalXTriplets, verticalXTriplets, totalPoints, fetchConsistencyData, loading }}>
+    <ConsistencyContext.Provider value={{ fullXColumns,
+                                          horizontalOTriplets,
+                                          horizontalXTriplets,
+                                          verticalXTriplets,
+                                          totalPoints,
+                                          totalMinutes,
+                                          moneyEquivalent,
+                                          fetchConsistencyData,
+                                          loading }}>
       {children}
     </ConsistencyContext.Provider>
   );

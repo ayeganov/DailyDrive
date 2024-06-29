@@ -1,21 +1,22 @@
-from contextlib import asynccontextmanager
-from uuid import UUID
 import logging
 import os
+from contextlib import asynccontextmanager
+from typing import Dict, List, Optional
+from uuid import UUID
 
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import List, Dict, Optional
 
-from chore_repository import ChoreRepository, get_chore_db
+from chore_repository import ChoreRepository, ChoreHistoryRepository, get_chore_db, get_chore_history_db
 from database import create_db_and_tables
 from models import ChoreTable
-from reward_calculator import find_regularities_with_locations
+from reward_calculator import find_regularities_with_locations, archive_and_reset_user_chores
 from settings import DailyDriveSettings
-from user_repository import auth_backend, current_active_user, fastapi_users, UserCreate, UserRead, UserUpdate, get_current_user
-
+from user_repository import (UserCreate, UserRead, UserUpdate, auth_backend,
+                             current_active_user, fastapi_users,
+                             get_current_user)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -105,7 +106,7 @@ async def add_chore(chore: Chore,
 async def update_chore(chore_id: UUID,
                        updated_chore: Chore,
                        chore_repo: ChoreRepository = Depends(get_chore_db),
-                       user=Depends(current_active_user)):
+                       user = Depends(current_active_user)):
     logger.info("Updating a chore for user %s", user.id)
     updated_chore.user_id = user.id
     return await chore_repo.update(chore_id, updated_chore.model_dump())
@@ -120,8 +121,11 @@ async def delete_chore(chore_id: UUID,
 
 
 @app.post("/api/v1/end_week", tags=["chores"])
-async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db)):
-    print("Ending the week")
+async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db),
+                   chore_history_repo: ChoreHistoryRepository = Depends(get_chore_history_db),
+                   user = Depends(current_active_user)):
+    print(f"Ending the week for user {user.id}")
+    return await archive_and_reset_user_chores(user.id, chore_repo, chore_history_repo)
 
 
 @app.post("/api/v1/get_scores", tags=["chores"])

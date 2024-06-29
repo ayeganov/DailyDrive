@@ -1,21 +1,22 @@
-from typing import Optional, Union
 import uuid
+from typing import Optional, Union
 
 from fastapi import Depends, Request
-from fastapi_users import FastAPIUsers, BaseUserManager, InvalidPasswordException, UUIDIDMixin, schemas
-from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
+from fastapi_users import (BaseUserManager, FastAPIUsers,
+                           InvalidPasswordException, UUIDIDMixin, schemas)
+from fastapi_users.authentication import (AuthenticationBackend,
+                                          BearerTransport, JWTStrategy)
 #from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
 from fastapi_users.db import SQLAlchemyUserDatabase
+from password_validator import PasswordValidator
 #from fastapi_users_db_sqlalchemy.access_token import (
 #    SQLAlchemyAccessTokenDatabase,
 #    SQLAlchemyBaseAccessTokenTableUUID,
 #)
 from sqlalchemy.ext.asyncio import AsyncSession
-from password_validator import PasswordValidator
 
 from database import get_async_session
 from models import User
-
 
 validator = PasswordValidator()
 validator.min(8).max(20).uppercase().lowercase().digits()

@@ -1,14 +1,13 @@
-from datetime import datetime, UTC, timedelta, date
-from typing import Annotated, List, Tuple
 import uuid
+from datetime import UTC, date, datetime, timedelta
+from typing import Annotated, List, Tuple
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from pydantic import BaseModel, Field
-from sqlalchemy import Column, DateTime, ForeignKey, String, JSON
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import relationship
-from sqlalchemy.types import Date, Integer, Float
+from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.types import Date, Float, Integer
 
 
 def utcnow():
@@ -81,3 +80,5 @@ class WeekScores(BaseModel):
     vertical_X_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
     full_X_columns: List[int] = Field(default_factory=list)
     total_points: int = 0
+    total_minutes: int = 0
+    money_equivalent: float = 0.0

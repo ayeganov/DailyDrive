@@ -1,7 +1,7 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Iterable
-from fastapi import Depends
 
+from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import UUID
 
