@@ -53,6 +53,11 @@ class BaseRepository(Generic[T]):
             return entity
         return None
 
+    async def update_entity(self, entity: T) -> T:
+        await self.session.commit()
+        await self.session.refresh(entity)
+        return entity
+
     async def delete(self, entity_id: UUID) -> Optional[T]:
         result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
         entity = result.scalars().first()

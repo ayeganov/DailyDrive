@@ -19,7 +19,7 @@ import UserStatsCard from './UserStatsCard';
 const ChoreChart: React.FC = () => {
   const [ chores, setChores ] = useState<Chore[]>([]);
   const { active_user, logout, user_initialized, switch_user } = useAuth();
-  const { fetchConsistencyData, totalPoints, totalMinutes, moneyEquivalent } = useConsistency();
+  const { fetchConsistencyData, scores, reward, } = useConsistency();
   const router = useRouter();
 
   useEffect(() => {
@@ -39,6 +39,7 @@ const ChoreChart: React.FC = () => {
       {
         console.log('Fetching chores for user:', active_user);
         const response = await axios.get<Chore[]>('/backend/api/v1/chores');
+        console.log('Fetched chores:', response.data);
         setChores(response.data);
         update_consistency_data(response.data);
       }
@@ -113,13 +114,13 @@ const ChoreChart: React.FC = () => {
   const userData = {
     avatarUrl: "/path-to-user-avatar.jpg",
     name: active_user,
-    totalPoints: 1234,
-    gameTime: "2h 30m",
-    pendingGameTime: totalMinutes,
-    tvTime: "1h 45m",
-    pendingTvTime: totalMinutes,
-    pendingPoints: totalPoints,
-    moneyEquivalent: moneyEquivalent
+    totalPoints: reward.total_points,
+    gameTime: reward.game_time,
+    pendingGameTime: scores.totalMinutes,
+    tvTime: reward.tv_time,
+    pendingTvTime: scores.totalMinutes,
+    pendingPoints: scores.totalPoints,
+    moneyEquivalent: scores.moneyEquivalent
   };
 
   return (

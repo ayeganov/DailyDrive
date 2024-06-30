@@ -1,8 +1,9 @@
 from typing import Iterable
 from sqlalchemy.dialects.postgresql import UUID
 
-from models import ChoreTable, WeekScores, Chore, ChoreHistory, get_current_week_start, utcnow
+from models import ChoreTable, WeekScores, Chore, ChoreHistory, get_current_week_start, utcnow, Reward
 from chore_repository import ChoreRepository, ChoreHistoryRepository
+from reward_repository import RewardRepository
 
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -85,13 +86,22 @@ def find_regularities_with_locations(chore_table: ChoreTable) -> WeekScores:
 async def archive_and_reset_user_chores(
     user_id: UUID,
     chore_repo: ChoreRepository,
-    chore_history_repo: ChoreHistoryRepository
+    chore_history_repo: ChoreHistoryRepository,
+    reward_repo: RewardRepository
 ) -> Iterable[Chore]:
     # Step 1: Fetch current chores for the specific user
     user_chores: Iterable[Chore] = await chore_repo.get_by_user_id(user_id)
 
     if not user_chores:
         return user_chores
+
+    chore_statuses_json: list = [chore.statuses for chore in user_chores]
+    chores_by_day = []
+    for chore_statuses in chore_statuses_json:
+        chores_as_list = [chore_statuses[day] for day in WEEKDAYS]
+        chores_by_day.append(chores_as_list)
+
+    chore_table = ChoreTable(table=chores_by_day)
 
     # Step 2: Create and add chore history entries
     for chore in user_chores:
@@ -106,15 +116,30 @@ async def archive_and_reset_user_chores(
         await chore_history_repo.add_entity(chore_history)
 
     # Step 3: Reset statuses of existing chores
-    reset_statuses = {
-        "Monday": "_", "Tuesday": "_", "Wednesday": "_",
-        "Thursday": "_", "Friday": "_", "Saturday": "_", "Sunday": "_"
-    }
+    reset_statuses = {day: "_" for day in WEEKDAYS}
 
     for chore in user_chores:
         await chore_repo.update(chore.id, {
             "statuses": reset_statuses,
             "week_start_date": get_current_week_start()
         })
+
+    # Step 4: Calculate rewards for the user
+    reward = await reward_repo.get_single_by_user_id(user_id)
+    scores = find_regularities_with_locations(chore_table)
+
+    if reward is None:
+        reward = Reward(
+            user_id=user_id,
+            star_points=scores.total_points,
+            tv_time_points=scores.total_minutes,
+            game_time_points=scores.total_minutes,
+        )
+        await reward_repo.add_entity(reward)
+    else:
+        reward.star_points += scores.total_points
+        reward.tv_time_points = max(0, reward.tv_time_points + scores.total_minutes)
+        reward.game_time_points = max(0, reward.game_time_points + scores.total_minutes)
+        await reward_repo.update_entity(reward)
 
     return user_chores

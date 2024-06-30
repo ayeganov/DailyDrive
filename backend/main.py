@@ -11,8 +11,9 @@ from pydantic import BaseModel
 
 from chore_repository import ChoreRepository, ChoreHistoryRepository, get_chore_db, get_chore_history_db
 from database import create_db_and_tables
-from models import ChoreTable
+from models import ChoreTable, CurrentReward, UserRewardScores
 from reward_calculator import find_regularities_with_locations, archive_and_reset_user_chores
+from reward_repository import RewardRepository, get_reward_db
 from settings import DailyDriveSettings
 from user_repository import (UserCreate, UserRead, UserUpdate, auth_backend,
                              current_active_user, fastapi_users,
@@ -123,16 +124,32 @@ async def delete_chore(chore_id: UUID,
 @app.post("/api/v1/end_week", tags=["chores"])
 async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db),
                    chore_history_repo: ChoreHistoryRepository = Depends(get_chore_history_db),
+                   reward_repo: RewardRepository = Depends(get_reward_db),
                    user = Depends(current_active_user)):
     print(f"Ending the week for user {user.id}")
-    return await archive_and_reset_user_chores(user.id, chore_repo, chore_history_repo)
+    return await archive_and_reset_user_chores(user.id, chore_repo, chore_history_repo, reward_repo)
 
 
 @app.post("/api/v1/get_scores", tags=["chores"])
-async def get_scores(chore_table: ChoreTable):
+async def get_scores(chore_table: ChoreTable,
+                     reward_repo: RewardRepository = Depends(get_reward_db),
+                     user = Depends(current_active_user)) -> UserRewardScores:
     print("Getting scores")
     print(chore_table)
-    return find_regularities_with_locations(chore_table)
+    week_scores = find_regularities_with_locations(chore_table)
+    current_reward = CurrentReward()
+    user_reward_score = UserRewardScores(scores=week_scores, reward=current_reward)
+
+    reward = await reward_repo.get_single_by_user_id(user.id)
+    if reward is not None:
+        user_reward_score.reward = CurrentReward(
+            star_points=reward.star_points,
+            tv_time_points=reward.tv_time_points,
+            game_time_points=reward.game_time_points
+        )
+
+    print(f"{user_reward_score=}")
+    return user_reward_score
 
 
 @app.get("/api/v1/protected_route", tags=["users"])

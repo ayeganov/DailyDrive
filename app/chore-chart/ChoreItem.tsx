@@ -69,16 +69,16 @@ function completed_to_icon(completed: string, is_perfect: boolean, is_triplet: b
 
 const ChoreItem: React.FC<ChoreItemProps> = ({ chore, onClick, completed, x, y }) =>
 {
-  const { fullXColumns, horizontalOTriplets, horizontalXTriplets, verticalXTriplets, loading } = useConsistency();
+  const { scores, loading } = useConsistency();
   const [ state, dispatch ] = useReducer(icon_reducer, initial_state);
   const { setAnimating } = useAnimation();
 
   useEffect(() => {
     if(loading) return;
 
-    const in_horizontal_x = coordinateExistsInArray([x, y], horizontalXTriplets);
-    const in_vertical_x = coordinateExistsInArray([x, y], verticalXTriplets);
-    const in_full_x = is_in_full_x_columns(y, fullXColumns);
+    const in_horizontal_x = coordinateExistsInArray([x, y], scores.horizontalXTriplets);
+    const in_vertical_x = coordinateExistsInArray([x, y], scores.verticalXTriplets);
+    const in_full_x = is_in_full_x_columns(y, scores.fullXColumns);
 
     const i_am_special = in_full_x || in_horizontal_x || in_vertical_x;
     const icon = completed_to_icon(completed, in_full_x, in_horizontal_x || in_vertical_x);
@@ -111,13 +111,13 @@ const ChoreItem: React.FC<ChoreItemProps> = ({ chore, onClick, completed, x, y }
       }
     }
 
-    dispatch({ type: 'SET_FULL_X_COLUMNS', payload: fullXColumns });
-    dispatch({ type: 'SET_HORIZONTAL_O_TRIPLETS', payload: horizontalOTriplets });
-    dispatch({ type: 'SET_HORIZONTAL_X_TRIPLETS', payload: horizontalXTriplets });
-    dispatch({ type: 'SET_VERTICAL_X_TRIPLETS', payload: verticalXTriplets });
+    dispatch({ type: 'SET_FULL_X_COLUMNS', payload: scores.fullXColumns });
+    dispatch({ type: 'SET_HORIZONTAL_O_TRIPLETS', payload: scores.horizontalOTriplets });
+    dispatch({ type: 'SET_HORIZONTAL_X_TRIPLETS', payload: scores.horizontalXTriplets });
+    dispatch({ type: 'SET_VERTICAL_X_TRIPLETS', payload: scores.verticalXTriplets });
     dispatch({ type: 'SET_AM_I_SPECIAL', payload: i_am_special });
 
-  }, [fullXColumns, horizontalOTriplets, horizontalXTriplets, verticalXTriplets]);
+  }, [scores]);
 
   if (loading) {
     return <div>Loading...</div>;

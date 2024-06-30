@@ -74,6 +74,12 @@ class ChoreTable(BaseModel):
     table: List[Annotated[List[str], Field(min_length=7, max_length=7)]]
 
 
+class CurrentReward(BaseModel):
+    star_points: int = Field(default_factory=int)
+    tv_time_points: int = Field(default_factory=int)
+    game_time_points: int = Field(default_factory=int)
+
+
 class WeekScores(BaseModel):
     horizontal_X_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
     horizontal_O_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
@@ -82,3 +88,8 @@ class WeekScores(BaseModel):
     total_points: int = 0
     total_minutes: int = 0
     money_equivalent: float = 0.0
+
+
+class UserRewardScores(BaseModel):
+    scores: WeekScores
+    reward: CurrentReward

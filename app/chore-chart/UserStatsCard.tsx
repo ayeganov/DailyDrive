@@ -5,16 +5,16 @@ import React from 'react';
 interface UserStatsCardProps {
   name: string;
   totalPoints: number;
-  gameTime: string;
+  gameTime: number;
   pendingGameTime: number;
-  tvTime: string;
+  tvTime: number;
   pendingTvTime: number;
   pendingPoints: number;
   moneyEquivalent: number;
 }
 
 
-function convert_minutes_to_display_time(minutes: number): string
+function convert_minutes_to_display_time(minutes: number, show_sign: boolean = true): string
 {
   const sign = minutes < 0 ? '-' : '+';
   const absMinutes = Math.abs(minutes);
@@ -26,7 +26,11 @@ function convert_minutes_to_display_time(minutes: number): string
   const hoursString = hours >= 0 ? `${hours}h ` : '';
   const minutesString = mins >= 0 ? `${mins}m` : '';
 
-  return `${sign}${daysString}${hoursString}${minutesString}`.trim();
+  if (show_sign) {
+    return `${sign}${daysString}${hoursString}${minutesString}`.trim();
+  }
+
+  return `${daysString}${hoursString}${minutesString}`.trim();
 }
 
 
@@ -46,6 +50,8 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   const pendingGameTimeDisplay = convert_minutes_to_display_time(pendingGameTime);
   const pendingTimeClass = pendingTvTime >= 0 ? 'font-bold' : 'text-red-500';
   const pendingTVTimeDisplay = convert_minutes_to_display_time(pendingTvTime);
+  const gameTimeDisplay = convert_minutes_to_display_time(gameTime, false);
+  const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
 
   return (
     <div className="card bg-gradient-to-r from-indigo-300 to-pink-400 shadow-lg rounded-3xl p-4 transition-all hover:shadow-xl">
@@ -62,12 +68,12 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
         <div className="flex space-x-3 text-sm">
           <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
             <div className="font-medium">🎮 Game</div>
-            <div className="text-lg font-bold">{gameTime}</div>
+            <div className="text-lg font-bold">{gameTimeDisplay}</div>
             <div className={`text-xs opacity-80 ${pendingGameTimeClass}`}>{pendingGameTimeDisplay}</div>
           </div>
           <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
             <div className="font-medium">📺 TV</div>
-            <div className="text-lg font-bold">{tvTime}</div>
+            <div className="text-lg font-bold">{tvTimeDisplay}</div>
             <div className={`text-xs opacity-80 ${pendingTimeClass}`}>{pendingTVTimeDisplay}</div>
           </div>
           <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
