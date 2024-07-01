@@ -1,47 +1,100 @@
 "use client";
 
 import axios from 'axios';
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-interface ConsistencyContextProps
+
+interface ConsistencyScores
 {
   fullXColumns: number[];
   horizontalOTriplets: number[][][];
   horizontalXTriplets: number[][][];
   verticalXTriplets: number[][][];
   totalPoints: number;
+  totalMinutes: number;
+  moneyEquivalent: number;
+};
+
+
+interface Rewards
+{
+  total_points: number;
+  tv_time: number;
+  game_time: number;
+};
+
+
+interface ConsistencyContextProps
+{
+  scores: ConsistencyScores;
+  reward: Rewards;
   fetchConsistencyData: (statuses: string[][]) => void;
   loading: boolean;
-};
+}
 
 
 const ConsistencyContext = createContext<ConsistencyContextProps | undefined>(undefined);
 
 
-export const ConsistencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
+const useConsistencyState = () =>
 {
-  const [fullXColumns, setFullXColumns] = useState<number[]>([]);
-  const [horizontalOTriplets, setHorizontalOTriplets] = useState<number[][][]>([]);
-  const [horizontalXTriplets, setHorizontalXTriplets] = useState<number[][][]>([]);
-  const [verticalXTriplets, setVerticalXTriplets] = useState<number[][][]>([]);
-  const [totalPoints, setTotalPoints] = useState<number>(0);
+  const [scores, setScores] = useState<ConsistencyScores>({
+    fullXColumns: [],
+    horizontalOTriplets: [],
+    horizontalXTriplets: [],
+    verticalXTriplets: [],
+    totalPoints: 0,
+    totalMinutes: 0,
+    moneyEquivalent: 0,
+  });
+
+  const [reward, setReward] = useState<Rewards>({
+    total_points: 0,
+    tv_time: 0,
+    game_time: 0,
+  });
+
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchConsistencyData = async (statuses: string[][]) =>
-  {
-    // Replace with actual API call
-    const response = await axios.post('/backend/api/v1/get_scores', { table: statuses });
-    const data = response.data;
-    setFullXColumns(data.full_X_columns);
-    setHorizontalOTriplets(data.horizontal_O_triplets);
-    setHorizontalXTriplets(data.horizontal_X_triplets);
-    setVerticalXTriplets(data.vertical_X_triplets);
-    setTotalPoints(data.total_points);
-    setLoading(false);
+  const fetchConsistencyData = async (statuses: string[][]) => {
+    try
+    {
+      const response = await axios.post('/backend/api/v1/get_scores', { table: statuses });
+      const data = response.data;
+      const week_scores = data.scores;
+
+      setScores({
+        fullXColumns: week_scores.full_X_columns,
+        horizontalOTriplets: week_scores.horizontal_O_triplets,
+        horizontalXTriplets: week_scores.horizontal_X_triplets,
+        verticalXTriplets: week_scores.vertical_X_triplets,
+        totalPoints: week_scores.total_points,
+        totalMinutes: week_scores.total_minutes,
+        moneyEquivalent: week_scores.money_equivalent,
+      });
+
+      setReward({
+        total_points: data.reward.star_points,
+        tv_time: data.reward.tv_time_points,
+        game_time: data.reward.game_time_points,
+      });
+
+    }
+    finally
+    {
+      setLoading(false);
+    }
   };
 
+  return { scores, reward, fetchConsistencyData, loading };
+};
+
+
+export const ConsistencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { scores, reward, fetchConsistencyData, loading } = useConsistencyState();
+
   return (
-    <ConsistencyContext.Provider value={{ fullXColumns, horizontalOTriplets, horizontalXTriplets, verticalXTriplets, totalPoints, fetchConsistencyData, loading }}>
+    <ConsistencyContext.Provider value={{ scores, reward, fetchConsistencyData, loading }}>
       {children}
     </ConsistencyContext.Provider>
   );

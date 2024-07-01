@@ -1,14 +1,13 @@
-from datetime import datetime, UTC, timedelta, date
-from typing import Annotated, List, Tuple
 import uuid
+from datetime import UTC, date, datetime, timedelta
+from typing import Annotated, List, Optional, Tuple
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
-from pydantic import BaseModel, Field
-from sqlalchemy import Column, DateTime, ForeignKey, String, JSON
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import relationship
-from sqlalchemy.types import Date, Integer, Float
+from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.types import Date, Float, Integer
 
 
 def utcnow():
@@ -75,9 +74,44 @@ class ChoreTable(BaseModel):
     table: List[Annotated[List[str], Field(min_length=7, max_length=7)]]
 
 
+class CurrentReward(BaseModel):
+    star_points: int = Field(default_factory=int)
+    tv_time_points: int = Field(default_factory=int)
+    game_time_points: int = Field(default_factory=int)
+
+
 class WeekScores(BaseModel):
     horizontal_X_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
     horizontal_O_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
     vertical_X_triplets: List[List[Tuple[int, int]]] = Field(default_factory=list)
     full_X_columns: List[int] = Field(default_factory=list)
     total_points: int = 0
+    total_minutes: int = 0
+    money_equivalent: float = 0.0
+
+
+class UserRewardScores(BaseModel):
+    scores: WeekScores
+    reward: CurrentReward
+
+
+class UiChore(BaseModel):
+    id: uuid.UUID
+    name: str
+    statuses: dict[str, str]
+    user_id: Optional[uuid.UUID] = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        arbitrary_types_allowed=True,
+        json_encoders={UUID: str}
+    )
+
+
+class UiUser(BaseModel):
+    id: uuid.UUID
+    email: str
+    name: str
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
+    is_verified: Optional[bool] = None

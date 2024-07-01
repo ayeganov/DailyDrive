@@ -16,3 +16,12 @@ export interface User
 
 export type Days = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 export const DAYS: Days[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+
+export type AlertType = 'info' | 'success' | 'warning' | 'error';
+
+export interface AlertProps {
+  id: string;
+  message: string;
+  type: AlertType;
+}

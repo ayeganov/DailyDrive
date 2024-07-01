@@ -1,7 +1,7 @@
-from datetime import datetime, UTC
-from typing import Iterable
-from fastapi import Depends
+from datetime import UTC, datetime
+from typing import Iterable, Optional
 
+from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -23,6 +23,14 @@ class RewardRepository(BaseRepository[Reward]):
         result = await self.session.execute(select(self.model).filter(self.model.user_id == user_id))
         entities = result.scalars().all()
         return entities
+
+    async def get_single_by_user_id(self, user_id: UUID) -> Optional[Reward]:
+        result = await self.session.execute(
+            select(self.model).filter(self.model.user_id == user_id).limit(1)
+        )
+        entity = result.scalars().first()
+        return entity
+
 
 
 async def get_reward_db(session=Depends(get_async_session)):

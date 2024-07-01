@@ -13,14 +13,16 @@ import Link from 'next/link';
 import { useAuth } from '../AuthContext';
 import { useConsistency } from '../ConsistencyContext';
 import { AnimationProvider } from '../AnimationContext';
+import { useAlert } from '../AlertContext';
 import UserStatsCard from './UserStatsCard';
 
 
 const ChoreChart: React.FC = () => {
   const [ chores, setChores ] = useState<Chore[]>([]);
   const { active_user, logout, user_initialized, switch_user } = useAuth();
-  const { fetchConsistencyData } = useConsistency();
+  const { fetchConsistencyData, scores, reward, } = useConsistency();
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   useEffect(() => {
     if(active_user === null)
@@ -39,6 +41,7 @@ const ChoreChart: React.FC = () => {
       {
         console.log('Fetching chores for user:', active_user);
         const response = await axios.get<Chore[]>('/backend/api/v1/chores');
+        console.log('Fetched chores:', response.data);
         setChores(response.data);
         update_consistency_data(response.data);
       }
@@ -66,6 +69,32 @@ const ChoreChart: React.FC = () => {
 
     update_consistency_data(new_chores);
   };
+
+
+  const handle_week_end = async () =>
+  {
+    const response = await axios.post('/backend/api/v1/end_week', { user: active_user });
+    // handle http errors first
+    if(response.status !== 200)
+    {
+      showAlert("Failed to process week end", 'error');
+      return;
+    }
+
+
+    const result = response.data.result;
+    console.log('Week end result:', result);
+    if(result.ok)
+    {
+      const new_chores = result.ok;
+      setChores(new_chores);
+      update_consistency_data(new_chores);
+    }
+    else if(result.error)
+    {
+      showAlert(result.error.message, 'error');
+    }
+  }
 
   const handle_delete_chore = async (id: string) =>
   {
@@ -102,13 +131,13 @@ const ChoreChart: React.FC = () => {
   const userData = {
     avatarUrl: "/path-to-user-avatar.jpg",
     name: active_user,
-    totalPoints: 1234,
-    gameTime: "2h 30m",
-    pendingGameTime: "+30m",
-    tvTime: "1h 45m",
-    pendingTvTime: "-15m",
-    pendingPoints: 50,
-    dollarEquivalent: 12.5
+    totalPoints: reward.total_points,
+    gameTime: reward.game_time,
+    pendingGameTime: scores.totalMinutes,
+    tvTime: reward.tv_time,
+    pendingTvTime: scores.totalMinutes,
+    pendingPoints: scores.totalPoints,
+    moneyEquivalent: scores.moneyEquivalent
   };
 
   return (
@@ -119,6 +148,11 @@ const ChoreChart: React.FC = () => {
             <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "5px white"}} text="Daily Drive" onClick={() => go_back_to_user_select()}/>
           </Link>
           <UserStatsCard {...userData} />
+          <div className="text-center sm:text-right whitespace-nowrap">
+            <div onClick={handle_week_end} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
+              <span className="inline-block ml-1 lucky-font text-yellow-200">End Week</span>
+            </div>
+          </div>
           <div className="text-center sm:text-right whitespace-nowrap">
             <div onClick={handle_log_out} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
               <span className="inline-block ml-1 lucky-font text-zinc-200">Logout</span>

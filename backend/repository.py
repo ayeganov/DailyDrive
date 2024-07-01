@@ -1,10 +1,9 @@
 from abc import abstractmethod
-from typing import Iterable, List, Dict, TypeVar, Generic, Optional
+from typing import Dict, Generic, Iterable, Optional, TypeVar
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
 
 T = TypeVar('T')
 
@@ -37,6 +36,12 @@ class BaseRepository(Generic[T]):
         await self.session.refresh(entity)
         return entity
 
+    async def add_entity(self, entity: T) -> T:
+        self.session.add(entity)
+        await self.session.commit()
+        await self.session.refresh(entity)
+        return entity
+
     async def update(self, entity_id: UUID, updated_data: Dict) -> Optional[T]:
         result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
         entity = result.scalars().first()
@@ -47,6 +52,11 @@ class BaseRepository(Generic[T]):
             await self.session.refresh(entity)
             return entity
         return None
+
+    async def update_entity(self, entity: T) -> T:
+        await self.session.commit()
+        await self.session.refresh(entity)
+        return entity
 
     async def delete(self, entity_id: UUID) -> Optional[T]:
         result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
