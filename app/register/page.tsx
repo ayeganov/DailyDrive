@@ -50,7 +50,7 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      await axios.post("/backend/auth/register", { email: email, password: password, name: name });
+      await axios.post("/backend/auth/register", { email: email, password: password, name: username});
       setError('');
       const success = await login(email, password);
       if (success)
