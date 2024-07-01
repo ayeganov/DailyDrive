@@ -7,10 +7,9 @@ import Modal from 'react-modal';
 import { useAuth } from './AuthContext';
 import LoginPage from './login/page';
 import UserSelection from './user_select/page';
-import { ConsistencyProvider, } from './ConsistencyContext';
 
 
-const App: React.FC = () =>
+const AppContent: React.FC = () =>
 {
   const { users, active_user } = useAuth();
   const [hydrated, setHydrated] = useState(false);
@@ -46,5 +45,14 @@ const App: React.FC = () =>
 
   return null;
 };
+
+
+const App: React.FC = () =>
+{
+  return (
+    <AppContent />
+  );
+};
+
 
 export default App;

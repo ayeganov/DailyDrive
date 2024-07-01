@@ -1,9 +1,9 @@
 import uuid
 from datetime import UTC, date, datetime, timedelta
-from typing import Annotated, List, Tuple
+from typing import Annotated, List, Optional, Tuple
 
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import JSON, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -93,3 +93,25 @@ class WeekScores(BaseModel):
 class UserRewardScores(BaseModel):
     scores: WeekScores
     reward: CurrentReward
+
+
+class UiChore(BaseModel):
+    id: uuid.UUID
+    name: str
+    statuses: dict[str, str]
+    user_id: Optional[uuid.UUID] = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        arbitrary_types_allowed=True,
+        json_encoders={UUID: str}
+    )
+
+
+class UiUser(BaseModel):
+    id: uuid.UUID
+    email: str
+    name: str
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
+    is_verified: Optional[bool] = None

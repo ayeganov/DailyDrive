@@ -1,10 +1,12 @@
 "use client";
-import axios from "axios";
+
 import { Inter } from "next/font/google";
 import "./globals.css";
 import {AuthProvider} from "./AuthContext";
+import { AlertProvider } from './AlertContext';
 
 const inter = Inter({ subsets: ["latin"] });
+
 
 export default function RootLayout({
   children,
@@ -15,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <AlertProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </AlertProvider>
       </body>
     </html>
   );

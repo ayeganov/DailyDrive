@@ -1,18 +1,17 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 from uuid import UUID
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 
 from chore_repository import ChoreRepository, ChoreHistoryRepository, get_chore_db, get_chore_history_db
 from database import create_db_and_tables
-from models import ChoreTable, CurrentReward, UserRewardScores
-from reward_calculator import find_regularities_with_locations, archive_and_reset_user_chores
+from models import ChoreTable, CurrentReward, UiChore, UiUser, UserRewardScores
+from reward_calculator import ChoresResult, find_regularities_with_locations, archive_and_reset_user_chores
 from reward_repository import RewardRepository, get_reward_db
 from settings import DailyDriveSettings
 from user_repository import (UserCreate, UserRead, UserUpdate, auth_backend,
@@ -71,31 +70,15 @@ app.include_router(
 )
 
 
-class Chore(BaseModel):
-    id: UUID
-    name: str
-    statuses: Dict[str, str]
-    user_id: Optional[UUID] = None
-
-
-class UiUser(BaseModel):
-    id: UUID
-    email: str
-    name: str
-    is_active: Optional[bool] = None
-    is_superuser: Optional[bool] = None
-    is_verified: Optional[bool] = None
-
-
-@app.get("/api/v1/chores", response_model=List[Chore], tags=["chores"])
+@app.get("/api/v1/chores", response_model=List[UiChore], tags=["chores"])
 async def get_chores(chore_repo: ChoreRepository = Depends(get_chore_db),
                      user=Depends(current_active_user)):
     logger.info("Getting all chores for user: %s", user.id)
     return await chore_repo.get_by_user_id(user.id)
 
 
-@app.post("/api/v1/chores", response_model=Chore, tags=["chores"])
-async def add_chore(chore: Chore,
+@app.post("/api/v1/chores", response_model=UiChore, tags=["chores"])
+async def add_chore(chore: UiChore,
                     chore_repo: ChoreRepository = Depends(get_chore_db),
                     user=Depends(current_active_user)):
     logger.info(f"Adding a chore: {chore}")
@@ -103,9 +86,9 @@ async def add_chore(chore: Chore,
     return await chore_repo.add(chore.model_dump(exclude_unset=True))
 
 
-@app.put("/api/v1/chores/{chore_id}", response_model=Chore, tags=["chores"])
+@app.put("/api/v1/chores/{chore_id}", response_model=UiChore, tags=["chores"])
 async def update_chore(chore_id: UUID,
-                       updated_chore: Chore,
+                       updated_chore: UiChore,
                        chore_repo: ChoreRepository = Depends(get_chore_db),
                        user = Depends(current_active_user)):
     logger.info("Updating a chore for user %s", user.id)
@@ -113,7 +96,7 @@ async def update_chore(chore_id: UUID,
     return await chore_repo.update(chore_id, updated_chore.model_dump())
 
 
-@app.delete("/api/v1/chores/{chore_id}", response_model=Chore, tags=["chores"])
+@app.delete("/api/v1/chores/{chore_id}", response_model=UiChore, tags=["chores"])
 async def delete_chore(chore_id: UUID,
                        chore_repo: ChoreRepository = Depends(get_chore_db),
                        _=Depends(current_active_user)):
@@ -125,9 +108,11 @@ async def delete_chore(chore_id: UUID,
 async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db),
                    chore_history_repo: ChoreHistoryRepository = Depends(get_chore_history_db),
                    reward_repo: RewardRepository = Depends(get_reward_db),
-                   user = Depends(current_active_user)):
+                   user = Depends(current_active_user)) -> ChoresResult:
     print(f"Ending the week for user {user.id}")
-    return await archive_and_reset_user_chores(user.id, chore_repo, chore_history_repo, reward_repo)
+    result = await archive_and_reset_user_chores(user.id, chore_repo, chore_history_repo, reward_repo)
+    print(f"{result=}")
+    return result
 
 
 @app.post("/api/v1/get_scores", tags=["chores"])

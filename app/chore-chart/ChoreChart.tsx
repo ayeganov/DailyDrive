@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useAuth } from '../AuthContext';
 import { useConsistency } from '../ConsistencyContext';
 import { AnimationProvider } from '../AnimationContext';
+import { useAlert } from '../AlertContext';
 import UserStatsCard from './UserStatsCard';
 
 
@@ -21,6 +22,7 @@ const ChoreChart: React.FC = () => {
   const { active_user, logout, user_initialized, switch_user } = useAuth();
   const { fetchConsistencyData, scores, reward, } = useConsistency();
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   useEffect(() => {
     if(active_user === null)
@@ -71,12 +73,27 @@ const ChoreChart: React.FC = () => {
 
   const handle_week_end = async () =>
   {
-    console.log('Ending week for user:', active_user);
     const response = await axios.post('/backend/api/v1/end_week', { user: active_user });
-    const new_chores = response.data;
-    setChores(new_chores);
+    // handle http errors first
+    if(response.status !== 200)
+    {
+      showAlert("Failed to process week end", 'error');
+      return;
+    }
 
-    update_consistency_data(new_chores);
+
+    const result = response.data.result;
+    console.log('Week end result:', result);
+    if(result.ok)
+    {
+      const new_chores = result.ok;
+      setChores(new_chores);
+      update_consistency_data(new_chores);
+    }
+    else if(result.error)
+    {
+      showAlert(result.error.message, 'error');
+    }
   }
 
   const handle_delete_chore = async (id: string) =>

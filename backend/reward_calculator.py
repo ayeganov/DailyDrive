@@ -1,9 +1,11 @@
 from typing import Iterable
+from pydantic import Json
 from sqlalchemy.dialects.postgresql import UUID
 
-from models import ChoreTable, WeekScores, Chore, ChoreHistory, get_current_week_start, utcnow, Reward
+from models import ChoreTable, WeekScores, Chore, ChoreHistory, get_current_week_start, utcnow, Reward, UiChore
 from chore_repository import ChoreRepository, ChoreHistoryRepository
 from reward_repository import RewardRepository
+from pydantic_utils import GenericResult, Ok, Err
 
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -83,17 +85,42 @@ def find_regularities_with_locations(chore_table: ChoreTable) -> WeekScores:
     return calculate_reward_times(scores)
 
 
+ChoresResult = GenericResult[list[UiChore], Json]
+
+
+def make_chore_result(chores: Iterable[Chore]) -> ChoresResult:
+    """
+    Helper function to create a RailResult
+    """
+    chores_list = [UiChore.model_validate(chore) for chore in chores]
+    return ChoresResult.model_construct(result=Ok(ok=chores_list))
+
+
+def make_chores_error(message: str) -> ChoresResult:
+    """
+    Helper function to create a RailError
+    """
+    return ChoresResult.model_construct(result=Err(error={"message": message}))
+
+
 async def archive_and_reset_user_chores(
     user_id: UUID,
     chore_repo: ChoreRepository,
     chore_history_repo: ChoreHistoryRepository,
     reward_repo: RewardRepository
-) -> Iterable[Chore]:
+) -> ChoresResult:
     # Step 1: Fetch current chores for the specific user
     user_chores: Iterable[Chore] = await chore_repo.get_by_user_id(user_id)
 
     if not user_chores:
-        return user_chores
+        return make_chore_result(user_chores)
+
+    current_week_start = get_current_week_start()
+
+    existing_history = await chore_history_repo.get_by_user_id_and_week(user_id, current_week_start)
+
+    if existing_history:
+        return make_chores_error("Chores for this week have already been archived")
 
     chore_statuses_json: list = [chore.statuses for chore in user_chores]
     chores_by_day = []
@@ -142,4 +169,4 @@ async def archive_and_reset_user_chores(
         reward.game_time_points = max(0, reward.game_time_points + scores.total_minutes)
         await reward_repo.update_entity(reward)
 
-    return user_chores
+    return make_chore_result(user_chores)
