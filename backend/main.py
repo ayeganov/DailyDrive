@@ -147,6 +147,87 @@ async def get_me(user=Depends(get_current_user)) -> UiUser:
     return user
 
 
+@app.post("/families/")
+async def create_family(
+    name: str,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_user),
+):
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    new_family = UserFamily(name=name, created_by_id=current_user.id)
+    new_family.members.append(current_user)
+    db.add(new_family)
+    await db.commit()
+    return {"id": new_family.id, "name": new_family.name}
+
+
+@app.post("/families/{family_id}/members/")
+async def add_family_member(
+    family_id: uuid.UUID,
+    user_create: UserCreate,
+    is_parent: bool = False,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_user),
+    user_manager: UserManager = Depends(get_user_manager),
+):
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    family = await db.get(UserFamily, family_id)
+    if not family or current_user not in family.members:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    if is_parent:
+        new_user = await user_manager.create(user_create)
+    else:
+        new_user = await user_manager.create_child(user_create, family_id)
+
+    await db.commit()
+    return {"id": new_user.id, "email": new_user.email, "name": new_user.name, "is_parent": new_user.is_superuser}
+
+
+@app.get("/families/{family_id}/members/")
+async def get_family_members(
+    family_id: uuid.UUID,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_user),
+):
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    family = await db.get(UserFamily, family_id)
+    if not family or current_user not in family.members:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    return [{"id": member.id, "name": member.name, "email": member.email, "is_parent": member.is_superuser} for member in family.members]
+
+
+@app.post("/families/{family_id}/parents/{user_id}")
+async def add_parent_to_family(
+    family_id: uuid.UUID,
+    user_id: uuid.UUID,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_user),
+):
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    family = await db.get(UserFamily, family_id)
+    if not family or current_user not in family.members:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    user_to_add = await db.get(User, user_id)
+    if not user_to_add or not user_to_add.is_superuser:
+        raise HTTPException(status_code=404, detail="User not found or not a parent")
+
+    if user_to_add not in family.members:
+        family.members.append(user_to_add)
+        await db.commit()
+
+    return {"message": "Parent added to family successfully"}
+
+
 def main():
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

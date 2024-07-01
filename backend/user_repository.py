@@ -7,7 +7,8 @@ from fastapi_users import (BaseUserManager, FastAPIUsers,
 from fastapi_users.authentication import (AuthenticationBackend,
                                           BearerTransport, JWTStrategy)
 #from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
-from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users.db import BaseUserDatabase, SQLAlchemyUserDatabase
+from fastapi_users.exceptions import InvalidID
 from password_validator import PasswordValidator
 #from fastapi_users_db_sqlalchemy.access_token import (
 #    SQLAlchemyAccessTokenDatabase,
@@ -16,7 +17,8 @@ from password_validator import PasswordValidator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_async_session
-from models import User
+from models import User, UserFamily
+from repository import BaseRepository
 
 validator = PasswordValidator()
 validator.min(8).max(20).uppercase().lowercase().digits()
@@ -37,9 +39,20 @@ class UserUpdate(schemas.BaseUserUpdate):
 SECRET = "secret"
 
 
+class FamilyRepository(BaseRepository[UserFamily]):
+
+    @property
+    def model(self) -> type[UserFamily]:
+        return UserFamily
+
+
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
+
+    def __init__(self, user_db: BaseUserDatabase, family_repo: FamilyRepository):
+        super().__init__(user_db)
+        self.family_repo = family_repo
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
@@ -59,6 +72,34 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
             raise InvalidPasswordException(reason="Password is invalid")
         return await super().validate_password(password, user)
 
+    async def create(
+        self,
+        user_create: schemas.BaseUserCreate,
+        safe: bool = False,
+        request: Optional[Request] = None,
+    ) -> User:
+        user_create.is_superuser = True
+        user_create.is_verified = True
+        safe = False
+        user = await super().create(user_create, safe, request)
+        return user
+
+
+    async def create_child(
+        self,
+        user_create: schemas.BaseUserCreate,
+        family_id: uuid.UUID,
+        safe: bool = True,
+        request: Optional[Request] = None,
+    ) -> User:
+        user = await super().create(user_create, safe, request)
+        family = await self.family_repo.get_by_id(family_id)
+        if not family:
+            raise InvalidID("Family not found")
+        family.members.append(user)
+        await self.family_repo.update_entity(family)
+        return user
+
 
 #class AccessToken(SQLAlchemyBaseAccessTokenTableUUID, Base):
 #    pass
@@ -66,6 +107,10 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield SQLAlchemyUserDatabase(session, User)
+
+
+async def get_family_repo(session: AsyncSession = Depends(get_async_session)):
+    yield FamilyRepository(session)
 
 
 #async def get_access_token_db(session: AsyncSession = Depends(get_async_session),):
@@ -82,8 +127,8 @@ def get_jwt_strategy():
     return JWTStrategy(secret=SECRET, lifetime_seconds=3600 * 24 * 10)
 
 
-async def get_user_manager(user_db=Depends(get_user_db)):
-    yield UserManager(user_db)
+async def get_user_manager(user_db=Depends(get_user_db), family_repo=Depends(get_family_repo)):
+    yield UserManager(user_db, family_repo)
 
 
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
