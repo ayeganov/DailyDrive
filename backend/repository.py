@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 T = TypeVar('T')
 
@@ -25,7 +26,12 @@ class BaseRepository(Generic[T]):
         return entities
 
     async def get_by_id(self, entity_id: UUID) -> Optional[T]:
-        result = await self.session.execute(select(self.model).filter(self.model.id == entity_id))
+        stmt = select(self.model).filter(self.model.id == entity_id)
+
+        for relation in self.model.eager_load_relations():
+            stmt = stmt.options(selectinload(relation))
+
+        result = await self.session.execute(stmt)
         entity = result.scalars().first()
         return entity if entity else None
 

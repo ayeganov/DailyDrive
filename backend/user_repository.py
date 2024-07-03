@@ -10,15 +10,20 @@ from fastapi_users.authentication import (AuthenticationBackend,
 from fastapi_users.db import BaseUserDatabase, SQLAlchemyUserDatabase
 from fastapi_users.exceptions import InvalidID
 from password_validator import PasswordValidator
+from pydantic import Json
+from sqlalchemy import inspect, select
 #from fastapi_users_db_sqlalchemy.access_token import (
 #    SQLAlchemyAccessTokenDatabase,
 #    SQLAlchemyBaseAccessTokenTableUUID,
 #)
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import NO_VALUE, joinedload, selectinload
 
-from database import get_async_session
-from models import User, UserFamily
-from repository import BaseRepository
+from backend.pydantic_utils import Err, GenericResult, Ok
+
+from .database import get_async_session
+from .models import UiFamily, User, UserFamily, user_family_association
+from .repository import BaseRepository
 
 validator = PasswordValidator()
 validator.min(8).max(20).uppercase().lowercase().digits()
@@ -45,14 +50,23 @@ class FamilyRepository(BaseRepository[UserFamily]):
     def model(self) -> type[UserFamily]:
         return UserFamily
 
+    async def get_user_families(self, user_id: uuid.UUID) -> list[UserFamily]:
+        stmt = select(UserFamily).join(
+            user_family_association
+        ).where(
+            user_family_association.c.user_id == user_id
+        ).options(
+            joinedload(UserFamily.members)
+        )
+
+        result = await self.session.execute(stmt)
+        families = result.unique().scalars().all()
+        return list(families)
+
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
-
-    def __init__(self, user_db: BaseUserDatabase, family_repo: FamilyRepository):
-        super().__init__(user_db)
-        self.family_repo = family_repo
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
@@ -88,16 +102,10 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     async def create_child(
         self,
         user_create: schemas.BaseUserCreate,
-        family_id: uuid.UUID,
         safe: bool = True,
         request: Optional[Request] = None,
     ) -> User:
         user = await super().create(user_create, safe, request)
-        family = await self.family_repo.get_by_id(family_id)
-        if not family:
-            raise InvalidID("Family not found")
-        family.members.append(user)
-        await self.family_repo.update_entity(family)
         return user
 
 
@@ -127,8 +135,8 @@ def get_jwt_strategy():
     return JWTStrategy(secret=SECRET, lifetime_seconds=3600 * 24 * 10)
 
 
-async def get_user_manager(user_db=Depends(get_user_db), family_repo=Depends(get_family_repo)):
-    yield UserManager(user_db, family_repo)
+async def get_user_manager(user_db=Depends(get_user_db)):
+    yield UserManager(user_db)
 
 
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
@@ -147,3 +155,24 @@ current_active_user = fastapi_users.current_user(active=True)
 
 async def get_current_user(user: User = Depends(current_active_user)):
     return {"id": str(user.id), "email": user.email, "name": user.name}
+
+
+FamilyResult = GenericResult[UiFamily, Json]
+
+
+async def make_family_result(family: UserFamily, family_repo: FamilyRepository) -> FamilyResult:
+
+    members_loaded = inspect(family).attrs["members"].loaded_value is not NO_VALUE
+
+    if not members_loaded:
+        stmt = select(UserFamily).options(selectinload(UserFamily.members)).filter(UserFamily.id == family.id)
+        result = await family_repo.session.execute(stmt)
+        loaded_family = result.scalar_one()
+    else:
+        loaded_family = family
+
+    return FamilyResult.model_construct(result=Ok(ok=UiFamily.model_validate(loaded_family)))
+
+
+def make_family_error(message: str) -> FamilyResult:
+    return FamilyResult.model_construct(result=Err(error={"message": message}))

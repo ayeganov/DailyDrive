@@ -1,22 +1,27 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Dict, Iterable, List, Optional
+from typing import Annotated, List, Optional
 from uuid import UUID
+import uuid
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi_users import InvalidID, InvalidPasswordException
+from fastapi_users.exceptions import FastAPIUsersException
+from pydantic import BaseModel
 
-from chore_repository import ChoreRepository, ChoreHistoryRepository, get_chore_db, get_chore_history_db
-from database import create_db_and_tables
-from models import ChoreTable, CurrentReward, UiChore, UiUser, UserRewardScores
-from reward_calculator import ChoresResult, find_regularities_with_locations, archive_and_reset_user_chores
-from reward_repository import RewardRepository, get_reward_db
-from settings import DailyDriveSettings
-from user_repository import (UserCreate, UserRead, UserUpdate, auth_backend,
+from .chore_repository import ChoreRepository, ChoreHistoryRepository, get_chore_db, get_chore_history_db
+from .database import create_db_and_tables
+from .dependencies import superuser_required
+from .models import ChoreTable, CurrentReward, UiChore, UiFamily, UiUser, User, UserFamily, UserRewardScores
+from .reward_calculator import ChoresResult, find_regularities_with_locations, archive_and_reset_user_chores
+from .reward_repository import RewardRepository, get_reward_db
+from .settings import DailyDriveSettings
+from .user_repository import (FamilyRepository, FamilyResult, UserCreate, UserManager, UserRead, UserUpdate, auth_backend,
                              current_active_user, fastapi_users,
-                             get_current_user)
+                             get_family_repo, get_user_manager, make_family_error, make_family_result)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,7 +35,7 @@ async def lifespan(app: FastAPI):
 
 
 settings = DailyDriveSettings()
-app = FastAPI(lifespan=lifespan, title="Daily Drive", version="0.1.0")
+app = FastAPI(lifespan=lifespan, title="Daily Drive", version="0.1.0", redirect_slashes=False)
 app.mount(settings.backend_public_url,
           StaticFiles(directory=os.path.join(os.path.dirname(__file__),
           "../public")),
@@ -143,89 +148,83 @@ async def protected_route(user=Depends(current_active_user)):
 
 
 @app.get("/api/v1/users/me", tags=["users"])
-async def get_me(user=Depends(get_current_user)) -> UiUser:
+async def get_me(user=Depends(current_active_user)) -> UiUser:
     return user
 
 
-@app.post("/families/")
+class FamilyCreate(BaseModel):
+    name: str
+
+
+class FamilyAddMember(BaseModel):
+    family_id: UUID
+    user_create: UserCreate
+
+
+class FamilyGet(BaseModel):
+    family_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+
+
+@app.post("/api/v1/families", dependencies=[Depends(superuser_required)])
 async def create_family(
-    name: str,
-    db: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(current_active_user),
-):
-    if not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    new_family = UserFamily(name=name, created_by_id=current_user.id)
+    family_create: FamilyCreate,
+    family_repo: Annotated[FamilyRepository, Depends(get_family_repo)],
+    current_user: Annotated[User, Depends(current_active_user)],
+) -> FamilyResult:
+    new_family = UserFamily(name=family_create.name, created_by_id=current_user.id)
     new_family.members.append(current_user)
-    db.add(new_family)
-    await db.commit()
-    return {"id": new_family.id, "name": new_family.name}
+    new_family = await family_repo.add_entity(new_family)
+    try:
+        result = await make_family_result(new_family, family_repo)
+        print(f"Created family: {result}")
+        return result
+    except Exception as e:
+        return make_family_error(str(e))
 
 
-@app.post("/families/{family_id}/members/")
+@app.post("/api/v1/families/members", dependencies=[Depends(superuser_required)])
 async def add_family_member(
-    family_id: uuid.UUID,
-    user_create: UserCreate,
-    is_parent: bool = False,
-    db: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(current_active_user),
-    user_manager: UserManager = Depends(get_user_manager),
-):
-    if not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not authorized")
+    family_add_member: FamilyAddMember,
+    family_repo: Annotated[FamilyRepository, Depends(get_family_repo)],
+    user_manager: Annotated[UserManager, Depends(get_user_manager)],
+) -> UiUser:
+    try:
+        family = await family_repo.get_by_id(family_add_member.family_id)
+        if not family:
+            raise InvalidID("Family not found")
 
-    family = await db.get(UserFamily, family_id)
-    if not family or current_user not in family.members:
-        raise HTTPException(status_code=403, detail="Not authorized")
+        if family_add_member.user_create.is_superuser:
+            new_user = await user_manager.create(family_add_member.user_create)
+        else:
+            new_user = await user_manager.create_child(family_add_member.user_create)
 
-    if is_parent:
-        new_user = await user_manager.create(user_create)
+        family.members.append(new_user)
+        family = await family_repo.update_entity(family)
+        return UiUser.model_validate(new_user)
+    except InvalidPasswordException:
+        raise HTTPException(status_code=400, detail="Password format is invalid")
+    except FastAPIUsersException as e:
+        raise HTTPException(status_code=400, detail=e.__class__.__name__)
+
+
+@app.get("/api/v1/families", dependencies=[Depends(superuser_required)])
+async def get_family(
+    family_repo: Annotated[FamilyRepository, Depends(get_family_repo)],
+    user_id: Optional[UUID] = Query(None, description="ID of the user to retrieve families for"),
+    family_id: Optional[UUID] = Query(None, description="ID of the family to retrieve"),
+) -> FamilyResult:
+    if family_id:
+        family = await family_repo.get_by_id(family_id)
+        if not family:
+            return make_family_error("Family not found")
+        return await make_family_result(family, family_repo)
+    elif user_id:
+        families = await family_repo.get_user_families(user_id)
+        assert len(families) <= 1, "User has too many families"
+        return await make_family_result(families[0], family_repo)
     else:
-        new_user = await user_manager.create_child(user_create, family_id)
-
-    await db.commit()
-    return {"id": new_user.id, "email": new_user.email, "name": new_user.name, "is_parent": new_user.is_superuser}
-
-
-@app.get("/families/{family_id}/members/")
-async def get_family_members(
-    family_id: uuid.UUID,
-    db: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(current_active_user),
-):
-    if not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    family = await db.get(UserFamily, family_id)
-    if not family or current_user not in family.members:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    return [{"id": member.id, "name": member.name, "email": member.email, "is_parent": member.is_superuser} for member in family.members]
-
-
-@app.post("/families/{family_id}/parents/{user_id}")
-async def add_parent_to_family(
-    family_id: uuid.UUID,
-    user_id: uuid.UUID,
-    db: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(current_active_user),
-):
-    if not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    family = await db.get(UserFamily, family_id)
-    if not family or current_user not in family.members:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    user_to_add = await db.get(User, user_id)
-    if not user_to_add or not user_to_add.is_superuser:
-        raise HTTPException(status_code=404, detail="User not found or not a parent")
-
-    if user_to_add not in family.members:
-        family.members.append(user_to_add)
-        await db.commit()
-
-    return {"message": "Parent added to family successfully"}
+        return make_family_error("Please provide a family_id or user_id")
 
 
 def main():

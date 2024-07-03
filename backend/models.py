@@ -21,7 +21,12 @@ def get_current_week_start() -> date:
 
 
 class Base(DeclarativeBase):
-    pass
+    __abstract__ = True
+
+
+    @classmethod
+    def eager_load_relations(cls):
+        return []
 
 
 class Chore(Base):
@@ -73,6 +78,10 @@ class UserFamily(Base):
     created_by_id = Column(UUID(as_uuid=True), ForeignKey('user.id'), nullable=False)
     created_by = relationship("User", foreign_keys=[created_by_id])
     members = relationship("User", secondary=user_family_association, back_populates="families")
+
+    @classmethod
+    def eager_load_relations(cls):
+        return [cls.members]
 
 
 class Reward(Base):
@@ -133,3 +142,22 @@ class UiUser(BaseModel):
     is_active: Optional[bool] = None
     is_superuser: Optional[bool] = None
     is_verified: Optional[bool] = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        arbitrary_types_allowed=True,
+        json_encoders={UUID: str}
+    )
+
+
+class UiFamily(BaseModel):
+    id: uuid.UUID
+    name: str
+    created_by_id: uuid.UUID
+    members: List[UiUser]
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        arbitrary_types_allowed=True,
+        json_encoders={UUID: str}
+    )

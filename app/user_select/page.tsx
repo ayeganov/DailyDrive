@@ -16,8 +16,8 @@ const UserSelection: React.FC = () =>
   const router = useRouter();
 
   const handle_user_choice = (user: User) => {
-    switch_user(user.username);
-    router.push('/chore-chart');
+    switch_user(user);
+    router.push('/');
   };
 
   return (

@@ -3,19 +3,15 @@ import { createContext, useState, useContext, ReactNode } from 'react';
 import axios from "axios";
 import { useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import { User } from './types';
 
-interface User {
-  username: string;
-  token: string;
-  email: string;
-}
 
 interface AuthContextType {
   users: Map<string, User>;
-  active_user: string | null;
+  active_user: User | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: (username: string) => void;
-  switch_user: (username: string|null) => void;
+  switch_user: (username: User|null) => void;
   user_initialized: boolean;
 }
 
@@ -67,17 +63,34 @@ const restore_logged_users = (): Map<string, User> => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [users, setUsers] = useState<Map<string, User>>(restore_logged_users());
-  const [active_user, setActiveUser] = useState<string | null>(null);
+  const [active_user, setActiveUser] = useState<User | null>(null);
   const [user_initialized, setUserInitialized] = useState(false);
 
   useEffect(() => {
-    const current_active_user = users.get(active_user || '');
-    if (current_active_user) {
-//      console.log("3 Setting axios token:", current_active_user.token);
-      axios.defaults.headers.common.Authorization = `Bearer ${current_active_user.token}`;
+    if (active_user && active_user.token) {
+      console.log("3 Setting axios token:", active_user.token);
+
+      const interceptor = axios.interceptors.request.use(
+        (config) => {
+          config.headers["Authorization"] = `Bearer ${active_user.token}`;
+          return config;
+        },
+        (error) => {
+          return Promise.reject(error);
+        }
+      );
+
+      setUserInitialized(true);
+      return () => {
+        axios.interceptors.request.eject(interceptor);
+      };
+    }
+    else
+    {
+      console.log("No active user, not setting axios token.");
       setUserInitialized(true);
     }
-  }, [active_user, users]);
+  }, [active_user]);
 
   useEffect(() => {
 //    console.info('2 Saving users to long term storage:', users);
@@ -107,10 +120,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const current_user = user_response.data;
       const updated_users = new Map(users);
-      updated_users.set(current_user.email, { username: current_user.name, token: auth_token, email: current_user.email});
+      updated_users.set(current_user.email, { 'username': current_user.name,
+                                              id: current_user.id,
+                                              token: auth_token,
+                                              is_superuser: current_user.is_superuser,
+                                              email: current_user.email});
 
       setUsers(updated_users);
-      setActiveUser(username);
+      setActiveUser(current_user);
 
       return true;
     } catch (error) {
@@ -119,21 +136,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = (username: string) => {
+  const logout = (email: string) => {
     const updated_users = new Map(users);
-    updated_users.delete(username);
+    updated_users.delete(email);
     setUsers(updated_users);
 
-    if (active_user === username) {
+    if (active_user !== null && active_user.email === email) {
       setActiveUser(null);
     }
 
     setUserInitialized(false);
   };
 
-  const switch_user = (username: string | null) => {
+  const switch_user = (user: User | null) => {
     setUserInitialized(false);
-    setActiveUser(username);
+    setActiveUser(user);
   };
 
   return (

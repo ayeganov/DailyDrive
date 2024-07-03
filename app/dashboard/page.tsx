@@ -1,17 +1,16 @@
-"use client";
+'use client';
 
 import React from 'react';
-import ChoreChart from './ChoreChart';
+import Dashboard from './Dashboard';
 import { ConsistencyProvider } from '../ConsistencyContext';
 
 
-const ChoreChartPage: React.FC = () => {
+const DashboardPage: React.FC = () => {
   return (
     <ConsistencyProvider>
-      <ChoreChart />
+      <Dashboard />
     </ConsistencyProvider>
   );
 };
 
-export default ChoreChartPage;
-
+export default DashboardPage;

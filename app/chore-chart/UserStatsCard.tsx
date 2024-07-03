@@ -1,9 +1,12 @@
 "use client";
 
+import assert from 'assert';
 import React from 'react';
+import { useAuth } from '../AuthContext';
+import { useRouter } from 'next/navigation';
+
 
 interface UserStatsCardProps {
-  name: string;
   totalPoints: number;
   gameTime: number;
   pendingGameTime: number;
@@ -34,9 +37,7 @@ function convert_minutes_to_display_time(minutes: number, show_sign: boolean = t
 }
 
 
-
 const UserStatsCard: React.FC<UserStatsCardProps> = ({
-  name,
   totalPoints,
   gameTime,
   pendingGameTime,
@@ -46,6 +47,11 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   moneyEquivalent
 }) => {
 
+  const router = useRouter();
+  const { active_user } = useAuth();
+
+  assert (active_user !== null, "Active user is null");
+
   const pendingGameTimeClass = pendingGameTime >= 0 ? 'font-bold' : 'text-red-500';
   const pendingGameTimeDisplay = convert_minutes_to_display_time(pendingGameTime);
   const pendingTimeClass = pendingTvTime >= 0 ? 'font-bold' : 'text-red-500';
@@ -53,16 +59,21 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   const gameTimeDisplay = convert_minutes_to_display_time(gameTime, false);
   const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
 
+  const handleAvatarClick = () => {
+    console.log(`Avatar of ${active_user.username} clicked!`);
+    router.push('/dashboard');
+  };
+
   return (
     <div className="card bg-gradient-to-r from-indigo-300 to-pink-400 shadow-lg rounded-3xl p-4 transition-all hover:shadow-xl">
       <div className="flex items-center space-x-4">
-        <div className="avatar">
+        <div className="avatar" onClick={handleAvatarClick}>
           <div className="w-16 h-16 rounded-full ring-2 ring-purple-300 ring-offset-2">
-            <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" alt={`${name}'s Avatar`} className="w-full h-full object-cover" />
+            <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" alt={`${active_user.username}'s Avatar`} className="w-full h-full object-cover" />
           </div>
         </div>
         <div className="flex-grow">
-          <h2 className="text-xl font-bold text-white">{name}</h2>
+          <h2 className="text-xl font-bold text-white">{active_user.username}</h2>
           <p className="text-sm text-white opacity-80">Total Stars: {totalPoints.toLocaleString()}</p>
         </div>
         <div className="flex space-x-3 text-sm">
@@ -88,7 +99,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
       </div>
     </div>
   );
-
 };
+
 
 export default UserStatsCard;
