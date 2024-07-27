@@ -9,12 +9,23 @@ export interface Chore
 
 export interface User
 {
-  username: string;
+  id: string;
+  name: string;
   token: string;
+  email: string;
+  is_superuser: boolean;
 }
 
 
-export type Days = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+export interface FamilyMember {
+  id: string;
+  name: string;
+  email: string;
+  is_parent: boolean;
+}
+
+
+export type Days = 'Chore' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 export const DAYS: Days[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 

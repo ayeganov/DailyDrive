@@ -41,7 +41,6 @@ const ChoreChart: React.FC = () => {
       {
         console.log('Fetching chores for user:', active_user);
         const response = await axios.get<Chore[]>('/backend/api/v1/chores');
-        console.log('Fetched chores:', response.data);
         setChores(response.data);
         update_consistency_data(response.data);
       }
@@ -73,7 +72,7 @@ const ChoreChart: React.FC = () => {
 
   const handle_week_end = async () =>
   {
-    const response = await axios.post('/backend/api/v1/end_week', { user: active_user });
+    const response = await axios.post('/backend/api/v1/end_week');
     // handle http errors first
     if(response.status !== 200)
     {
@@ -106,13 +105,14 @@ const ChoreChart: React.FC = () => {
 
   const handle_log_out = () =>
   {
+    console.log("about to logout user:", active_user);
     if(active_user === null)
     {
       console.error('No active user to log out!')
       return;
     }
     console.log('Logging out user:', active_user);
-    logout(active_user);
+    logout(active_user.email);
     router.push('/');
   };
 
@@ -130,7 +130,6 @@ const ChoreChart: React.FC = () => {
 
   const userData = {
     avatarUrl: "/path-to-user-avatar.jpg",
-    name: active_user,
     totalPoints: reward.total_points,
     gameTime: reward.game_time,
     pendingGameTime: scores.totalMinutes,

@@ -56,3 +56,7 @@ const App: React.FC = () =>
 
 
 export default App;
+
+
+//import App from './StatBox';
+//export default App;

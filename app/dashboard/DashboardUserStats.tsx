@@ -1,19 +1,15 @@
 "use client";
 
-import assert from 'assert';
 import React from 'react';
-import { useAuth } from '../AuthContext';
-import { useRouter } from 'next/navigation';
+import { FamilyMember } from '../types';
 import { StatBox, TimeModifier, PositiveIntegerPicker, timeOperation, starsOperation } from '../StatBox';
 
 
-interface UserStatsCardProps {
-  totalPoints: number;
+interface DashboardUserStatsProps {
+  user: FamilyMember;
   gameTime: number;
-  pendingGameTime: number;
   tvTime: number;
-  pendingTvTime: number;
-  pendingPoints: number;
+  stars: number;
   moneyEquivalent: number;
 }
 
@@ -35,44 +31,28 @@ function convert_minutes_to_display_time(minutes: number, show_sign: boolean = t
 }
 
 
-const UserStatsCard: React.FC<UserStatsCardProps> = ({
-  totalPoints,
+const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
+  user,
   gameTime,
-  pendingGameTime,
   tvTime,
-  pendingTvTime,
-  pendingPoints,
+  stars,
   moneyEquivalent
 }) => {
 
-  const router = useRouter();
-  const { active_user } = useAuth();
-
-  assert (active_user !== null, "Active user is null");
-
-  const pendingGameTimeClass = pendingGameTime >= 0 ? 'font-bold' : 'text-red-500';
-  const pendingGameTimeDisplay = convert_minutes_to_display_time(pendingGameTime);
-  const pendingTimeClass = pendingTvTime >= 0 ? 'font-bold' : 'text-red-500';
-  const pendingTVTimeDisplay = convert_minutes_to_display_time(pendingTvTime);
   const gameTimeDisplay: string = convert_minutes_to_display_time(gameTime, false);
   const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
-
-
-  const handleAvatarClick = () => {
-    router.push('/dashboard');
-  };
 
   return (
     <div className="card bg-gradient-to-r from-indigo-300 to-pink-400 shadow-lg rounded-3xl p-4 transition-all hover:shadow-xl">
       <div className="flex items-center space-x-4">
-        <div className="avatar" onClick={handleAvatarClick}>
+        <div className="avatar">
           <div className="w-16 h-16 rounded-full ring-2 ring-purple-300 ring-offset-2">
-            <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" alt={`${active_user.name}'s Avatar`} className="w-full h-full object-cover" />
+            <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" alt={`${user.name}'s Avatar`} className="w-full h-full object-cover" />
           </div>
         </div>
         <div className="flex-grow">
-          <h2 className="text-xl font-bold text-white">{active_user.name}</h2>
-          <p className="text-sm text-white opacity-80">{active_user.email}</p>
+          <h2 className="text-xl font-bold text-white">{user.name}</h2>
+          <p className="text-sm text-white opacity-80">{user.email}</p>
         </div>
 
         <StatBox icon="🎮"
@@ -84,7 +64,6 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
-                     <div className={`text-xs text-white opacity-80 ${pendingGameTimeClass}`}>{pendingGameTimeDisplay}</div>
                    </div>)}
         />
 
@@ -97,20 +76,18 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
-                     <div className={`text-xs text-white opacity-80 ${pendingTimeClass}`}>{pendingTVTimeDisplay}</div>
                    </div>)}
         />
 
         <StatBox icon="🌟"
                  label="Stars"
-                 initialValue={totalPoints}
+                 initialValue={stars}
                  defaultValue={0}
                  renderPicker={PositiveIntegerPicker}
                  applyOperation={starsOperation}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
-                     <div className={`text-xs text-white opacity-80`}>{pendingPoints}</div>
                    </div>)}
         />
 
@@ -123,6 +100,4 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
     </div>
   );
 };
-
-
-export default UserStatsCard;
+export default DashboardUserStats;

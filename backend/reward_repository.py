@@ -5,9 +5,9 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import UUID
 
-from database import get_async_session
-from models import Reward
-from repository import BaseRepository
+from .database import get_async_session
+from .models import Reward
+from .repository import BaseRepository
 
 
 def utcnow():

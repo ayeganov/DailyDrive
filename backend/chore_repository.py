@@ -7,9 +7,9 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from database import get_async_session
-from models import Chore, ChoreHistory
-from repository import BaseRepository
+from .database import get_async_session
+from .models import Chore, ChoreHistory
+from .repository import BaseRepository
 
 
 class ChoreRepository(BaseRepository[Chore]):

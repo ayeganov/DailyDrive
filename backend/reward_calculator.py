@@ -2,10 +2,10 @@ from typing import Iterable
 from pydantic import Json
 from sqlalchemy.dialects.postgresql import UUID
 
-from models import ChoreTable, WeekScores, Chore, ChoreHistory, get_current_week_start, utcnow, Reward, UiChore
-from chore_repository import ChoreRepository, ChoreHistoryRepository
-from reward_repository import RewardRepository
-from pydantic_utils import GenericResult, Ok, Err
+from .models import ChoreTable, WeekScores, Chore, ChoreHistory, get_current_week_start, utcnow, Reward, UiChore
+from .chore_repository import ChoreRepository, ChoreHistoryRepository
+from .reward_repository import RewardRepository
+from .pydantic_utils import GenericResult, Ok, Err
 
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]

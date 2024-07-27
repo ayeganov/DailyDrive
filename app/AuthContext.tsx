@@ -3,19 +3,15 @@ import { createContext, useState, useContext, ReactNode } from 'react';
 import axios from "axios";
 import { useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import { User } from './types';
 
-interface User {
-  username: string;
-  token: string;
-  email: string;
-}
 
 interface AuthContextType {
   users: Map<string, User>;
-  active_user: string | null;
+  active_user: User | null;
   login: (username: string, password: string) => Promise<boolean>;
-  logout: (username: string) => void;
-  switch_user: (username: string|null) => void;
+  logout: (email: string) => void;
+  switch_user: (user: User|null) => void;
   user_initialized: boolean;
 }
 
@@ -61,23 +57,41 @@ const restore_logged_users = (): Map<string, User> => {
   const users = get_users_from_local_storage();
   const valid_users = users.filter((user) => !is_token_expired(user.token));
 //  console.log("Valid users:", valid_users);
-  return new Map(valid_users.map(user => [user.username, user]));
+  return new Map(valid_users.map(user => [user.name, user]));
 };
 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [users, setUsers] = useState<Map<string, User>>(restore_logged_users());
-  const [active_user, setActiveUser] = useState<string | null>(null);
+  const [active_user, setActiveUser] = useState<User | null>(null);
   const [user_initialized, setUserInitialized] = useState(false);
 
   useEffect(() => {
-    const current_active_user = users.get(active_user || '');
-    if (current_active_user) {
-//      console.log("3 Setting axios token:", current_active_user.token);
-      axios.defaults.headers.common.Authorization = `Bearer ${current_active_user.token}`;
+//    console.log('1 Active user:', active_user);
+    if (active_user && active_user.token) {
+//      console.log("3 Setting axios token:", active_user.token);
+
+      const interceptor = axios.interceptors.request.use(
+        (config) => {
+          config.headers["Authorization"] = `Bearer ${active_user.token}`;
+          return config;
+        },
+        (error) => {
+          return Promise.reject(error);
+        }
+      );
+
+      setUserInitialized(true);
+      return () => {
+        axios.interceptors.request.eject(interceptor);
+      };
+    }
+    else
+    {
+//      console.log("No active user, not setting axios token.");
       setUserInitialized(true);
     }
-  }, [active_user, users]);
+  }, [active_user]);
 
   useEffect(() => {
 //    console.info('2 Saving users to long term storage:', users);
@@ -85,7 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [users]);
 
   const login = async (username: string, password: string) => {
-//    console.log('Logging in with:', username, password);
     try {
       const formData = new FormData();
       formData.set('username', username);
@@ -106,11 +119,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const current_user = user_response.data;
+      current_user.token = auth_token;
       const updated_users = new Map(users);
-      updated_users.set(current_user.email, { username: current_user.name, token: auth_token, email: current_user.email});
+      updated_users.set(current_user.email, current_user);
 
       setUsers(updated_users);
-      setActiveUser(username);
+//      console.log("Setting active user:", current_user);
+      setActiveUser(current_user);
 
       return true;
     } catch (error) {
@@ -119,21 +134,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = (username: string) => {
+  const logout = (email: string) => {
+//    console.log("Removing user from local storage:", email);
     const updated_users = new Map(users);
-    updated_users.delete(username);
+    updated_users.delete(email);
     setUsers(updated_users);
 
-    if (active_user === username) {
+    if (active_user !== null && active_user.email === email) {
       setActiveUser(null);
     }
 
     setUserInitialized(false);
   };
 
-  const switch_user = (username: string | null) => {
+  const switch_user = (user: User | null) => {
     setUserInitialized(false);
-    setActiveUser(username);
+//    console.log("Switching user to:", user);
+    setActiveUser(user);
   };
 
   return (
