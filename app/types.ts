@@ -10,10 +10,18 @@ export interface Chore
 export interface User
 {
   id: string;
-  username: string;
+  name: string;
   token: string;
   email: string;
   is_superuser: boolean;
+}
+
+
+export interface FamilyMember {
+  id: string;
+  name: string;
+  email: string;
+  is_parent: boolean;
 }
 
 

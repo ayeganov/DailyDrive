@@ -105,6 +105,7 @@ const ChoreChart: React.FC = () => {
 
   const handle_log_out = () =>
   {
+    console.log("about to logout user:", active_user);
     if(active_user === null)
     {
       console.error('No active user to log out!')

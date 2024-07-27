@@ -6,19 +6,15 @@ import AddMemberForm from './AddMemberForm';
 import { useAuth } from '../AuthContext';
 import { useAlert } from '../AlertContext';
 import { useRouter } from 'next/navigation';
-
-
-interface FamilyMember {
-  id: string;
-  name: string;
-  email: string;
-  is_parent: boolean;
-}
+import ColoredText from '../ColoredText';
+import { FamilyMember } from '../types';
+import FamilyMembersList from './FamilyMemberList';
+import DashboardUserStats from './DashboardUserStats';
 
 
 const Dashboard: React.FC = () => {
-  const [ familyMembers, setFamilyMembers ] = useState<FamilyMember[]>([]);
-  const [ familyId, setFamilyId ] = useState<string | null>(null);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [familyId, setFamilyId] = useState<string | null>(null);
   const { active_user } = useAuth();
   const { showAlert } = useAlert();
   const router = useRouter();
@@ -27,28 +23,28 @@ const Dashboard: React.FC = () => {
     const fetchFamilyData = async () => {
       try {
         console.log('Fetching family data for user:', active_user);
-        const params = { user_id: active_user?.id};
+        const params = { user_id: active_user?.id };
         const response = await axios.get('/backend/api/v1/families', { params });
 
         const result = response.data.result;
 
-        if(result.ok)
-        {
+        if (result.ok) {
           const members = result.ok.members;
-          const family_members = members.map((member: any) => {
-            return {
-              id: member.id,
-              name: member.name,
-              email: member.email,
-              is_parent: member.is_superuser,
-            };
-          });
+          const family_members = members.map((member: any) => ({
+            id: member.id,
+            name: member.name,
+            email: member.email,
+            is_superuser: member.is_superuser,
+            token: '',
+            gameTime: Math.floor(Math.random() * 100),
+            tvTime: Math.floor(Math.random() * 100),
+            stars: Math.floor(Math.random() * 1000),
+            moneyEquivalent: Math.random() * 100,
+          }));
 
           setFamilyMembers(family_members);
           setFamilyId(result.ok.id);
-        }
-        else
-        {
+        } else {
           console.error('Error fetching family data:', result);
           showAlert('Error fetching family data', 'error');
         }
@@ -70,47 +66,31 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6" onClick={go_home}>Family Dashboard</h1>
+    <div id="fam-dashboard" className="min-h-screen w-full bg-gray-100">
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center mb-8">
 
-      <div className="card bg-base-100 shadow-xl mb-8">
-        <div className="card-body">
-          <h2 className="card-title mb-4">Family Members</h2>
-          {familyMembers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {familyMembers.map((member) => (
-                    <tr key={member.id}>
-                      <td>{member.name}</td>
-                      <td>{member.email}</td>
-                      <td>{member.is_parent ? 'Parent' : 'Child'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p>No family members found.</p>
-          )}
+          <ColoredText
+            className="superbubble-font text-8xl p-8 cursor-pointer"
+            style={{ WebkitTextStroke: '5px white' }}
+            onClick={go_home}
+            text="Family 🏠 Board"
+          />
         </div>
-      </div>
 
-      <div className="card bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title mb-4">Add New Family Member</h2>
-          {familyId ? (
-            <AddMemberForm familyId={familyId} onAddMember={handleAddMember} />
-          ) : (
-            <p>Loading family information...</p>
-          )}
+        <div className="mb-8">
+          <FamilyMembersList familyMembers={familyMembers} />
+        </div>
+
+        <div className="card bg-white shadow-xl">
+          <div className="card-body">
+            <h2 className="card-title mb-4">Add New Family Member</h2>
+            {familyId ? (
+              <AddMemberForm familyId={familyId} onAddMember={handleAddMember} />
+            ) : (
+              <p>Loading family information...</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

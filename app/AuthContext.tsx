@@ -10,8 +10,8 @@ interface AuthContextType {
   users: Map<string, User>;
   active_user: User | null;
   login: (username: string, password: string) => Promise<boolean>;
-  logout: (username: string) => void;
-  switch_user: (username: User|null) => void;
+  logout: (email: string) => void;
+  switch_user: (user: User|null) => void;
   user_initialized: boolean;
 }
 
@@ -57,7 +57,7 @@ const restore_logged_users = (): Map<string, User> => {
   const users = get_users_from_local_storage();
   const valid_users = users.filter((user) => !is_token_expired(user.token));
 //  console.log("Valid users:", valid_users);
-  return new Map(valid_users.map(user => [user.username, user]));
+  return new Map(valid_users.map(user => [user.name, user]));
 };
 
 
@@ -67,8 +67,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user_initialized, setUserInitialized] = useState(false);
 
   useEffect(() => {
+//    console.log('1 Active user:', active_user);
     if (active_user && active_user.token) {
-      console.log("3 Setting axios token:", active_user.token);
+//      console.log("3 Setting axios token:", active_user.token);
 
       const interceptor = axios.interceptors.request.use(
         (config) => {
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     else
     {
-      console.log("No active user, not setting axios token.");
+//      console.log("No active user, not setting axios token.");
       setUserInitialized(true);
     }
   }, [active_user]);
@@ -98,7 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [users]);
 
   const login = async (username: string, password: string) => {
-//    console.log('Logging in with:', username, password);
     try {
       const formData = new FormData();
       formData.set('username', username);
@@ -119,14 +119,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const current_user = user_response.data;
+      current_user.token = auth_token;
       const updated_users = new Map(users);
-      updated_users.set(current_user.email, { 'username': current_user.name,
-                                              id: current_user.id,
-                                              token: auth_token,
-                                              is_superuser: current_user.is_superuser,
-                                              email: current_user.email});
+      updated_users.set(current_user.email, current_user);
 
       setUsers(updated_users);
+//      console.log("Setting active user:", current_user);
       setActiveUser(current_user);
 
       return true;
@@ -137,6 +135,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = (email: string) => {
+//    console.log("Removing user from local storage:", email);
     const updated_users = new Map(users);
     updated_users.delete(email);
     setUsers(updated_users);
@@ -150,6 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const switch_user = (user: User | null) => {
     setUserInitialized(false);
+//    console.log("Switching user to:", user);
     setActiveUser(user);
   };
 
