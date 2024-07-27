@@ -59,7 +59,15 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
 
 
   const handleAvatarClick = () => {
-    router.push('/dashboard');
+    if(active_user === null || active_user === undefined)
+    {
+      return;
+    }
+
+    if(active_user.is_superuser)
+    {
+      router.push('/dashboard');
+    }
   };
 
   return (
