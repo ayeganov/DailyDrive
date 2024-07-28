@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import TimePicker from './TimePicker';
+import { useAuth } from './AuthContext';
 
 
 interface StatBoxProps {
@@ -65,8 +66,11 @@ export const StatBox: React.FC<StatBoxProps> = ({
   const [value, setValue] = useState<string | number>(initialValue);
   const [tempValue, setTempValue] = useState<string | number>(defaultValue);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const [operation, setOperation] = useState<'add' | 'subtract'>('add');
+  const [operation, setOperation] = useState<'add' | 'subtract'>('subtract');
   const pickerRef = useRef<HTMLDivElement>(null);
+  const { active_user } = useAuth();
+
+  const is_superuser = active_user?.is_superuser || false;
 
 
   useEffect(() => {
@@ -83,6 +87,13 @@ export const StatBox: React.FC<StatBoxProps> = ({
   };
 
   const toggleOperation = () => {
+
+    const is_switching_to_add = operation === 'subtract';
+    if (is_switching_to_add && !is_superuser)
+    {
+      return
+    }
+
     setOperation(prev => prev === 'add' ? 'subtract' : 'add');
   };
 
@@ -195,7 +206,7 @@ export const TimeModifier: React.FC<PickerProps> = ({ value, onChange, onApply, 
         />
         <div className="mb-2 bg-white bg-opacity-70 rounded p-2">
           <ToggleSwitch
-            checked={operation === 'add'} 
+            checked={operation === 'add'}
             onChange={onToggleOperation}
             addLabel="Add Time"
             subtractLabel="Subtract Time"

@@ -31,6 +31,7 @@ export const DAYS: Days[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 
 export type AlertType = 'info' | 'success' | 'warning' | 'error';
 
+
 export interface AlertProps {
   id: string;
   message: string;
