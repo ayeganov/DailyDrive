@@ -1,8 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, {useState} from 'react';
 import { FamilyMember } from '../types';
-import { StatBox, TimeModifier, PositiveIntegerPicker, timeOperation, starsOperation } from '../StatBox';
+import { StatBox, TimeModifier, PositiveIntegerPicker } from '../StatBox';
+import { update_reward_stars, update_reward_time } from '../Utils';
+import {MONEY_PER_STAR_POINT} from '../Constants';
 
 
 interface DashboardUserStatsProps {
@@ -10,7 +12,6 @@ interface DashboardUserStatsProps {
   gameTime: number;
   tvTime: number;
   stars: number;
-  moneyEquivalent: number;
 }
 
 
@@ -36,11 +37,18 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
   gameTime,
   tvTime,
   stars,
-  moneyEquivalent
 }) => {
 
+  const [ money, setMoney ] = useState(stars * MONEY_PER_STAR_POINT);
   const gameTimeDisplay: string = convert_minutes_to_display_time(gameTime, false);
   const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
+
+  const update_star_points = async (value: number, operation: string, amount: number) =>   {
+    const new_stars_str = await update_reward_stars(user.id, 'star_points', value, operation, amount);
+    const new_stars = parseInt(new_stars_str);
+    setMoney(new_stars * MONEY_PER_STAR_POINT);
+    return new_stars_str;
+  }
 
   return (
     <div className="card bg-gradient-to-r from-indigo-300 to-pink-400 shadow-lg rounded-3xl p-4 transition-all hover:shadow-xl">
@@ -60,7 +68,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                  initialValue={gameTimeDisplay}
                  defaultValue="00:00"
                  renderPicker={TimeModifier}
-                 applyOperation={timeOperation}
+                 applyOperation={(...args: any[]) => update_reward_time(user.id, 'game_time', ...args)}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -72,7 +80,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                  initialValue={tvTimeDisplay}
                  defaultValue="00:00"
                  renderPicker={TimeModifier}
-                 applyOperation={timeOperation}
+                 applyOperation={(...args: any[]) => update_reward_time(user.id, 'tv_time', ...args)}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -84,7 +92,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                  initialValue={stars}
                  defaultValue={0}
                  renderPicker={PositiveIntegerPicker}
-                 applyOperation={starsOperation}
+                 applyOperation={update_star_points}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -93,8 +101,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
 
           <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
             <div className="font-medium">💵 Value</div>
-            <div className="text-lg font-bold">${moneyEquivalent.toFixed(2)}</div>
-            <span className={`text-xs text-white opacity-80`}>USD</span>
+            <div className="text-lg font-bold">${money.toFixed(2)}</div>
           </div>
       </div>
     </div>

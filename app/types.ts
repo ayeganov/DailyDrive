@@ -25,11 +25,20 @@ export interface FamilyMember {
 }
 
 
+export interface Rewards
+{
+  star_points: number;
+  tv_time: number;
+  game_time: number;
+};
+
+
 export type Days = 'Chore' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 export const DAYS: Days[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 
 export type AlertType = 'info' | 'success' | 'warning' | 'error';
+
 
 export interface AlertProps {
   id: string;

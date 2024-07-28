@@ -39,7 +39,6 @@ const ChoreChart: React.FC = () => {
     {
       if(user_initialized)
       {
-        console.log('Fetching chores for user:', active_user);
         const response = await axios.get<Chore[]>('/backend/api/v1/chores');
         setChores(response.data);
         update_consistency_data(response.data);
@@ -130,13 +129,12 @@ const ChoreChart: React.FC = () => {
 
   const userData = {
     avatarUrl: "/path-to-user-avatar.jpg",
-    totalPoints: reward.total_points,
+    totalPoints: reward.star_points,
     gameTime: reward.game_time,
     pendingGameTime: scores.totalMinutes,
     tvTime: reward.tv_time,
     pendingTvTime: scores.totalMinutes,
     pendingPoints: scores.totalPoints,
-    moneyEquivalent: scores.moneyEquivalent
   };
 
   return (

@@ -149,7 +149,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const switch_user = (user: User | null) => {
     setUserInitialized(false);
-//    console.log("Switching user to:", user);
     setActiveUser(user);
   };
 

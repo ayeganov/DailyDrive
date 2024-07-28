@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import TimePicker from './TimePicker';
+import { useAuth } from './AuthContext';
 
 
 interface StatBoxProps {
@@ -9,7 +10,7 @@ interface StatBoxProps {
   defaultValue: string | number;
   renderContent?: (props: { value: string | number }) => React.ReactNode;
   renderPicker: (props: PickerProps) => React.ReactNode;
-  applyOperation: (currentValue: string | number, operation: 'add' | 'subtract', amount: string | number) => string | number;
+  applyOperation: (currentValue: string | number, operation: 'add' | 'subtract', amount: string | number) => Promise<string | number>;
 }
 
 
@@ -42,7 +43,6 @@ export function timeOperation(currentValue: string, operation: 'add' | 'subtract
   const newMinutes = Math.abs(newTotalMinutes % 60);
 
   return `${sign}${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
-
 };
 
 
@@ -65,8 +65,11 @@ export const StatBox: React.FC<StatBoxProps> = ({
   const [value, setValue] = useState<string | number>(initialValue);
   const [tempValue, setTempValue] = useState<string | number>(defaultValue);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const [operation, setOperation] = useState<'add' | 'subtract'>('add');
+  const [operation, setOperation] = useState<'add' | 'subtract'>('subtract');
   const pickerRef = useRef<HTMLDivElement>(null);
+  const { active_user } = useAuth();
+
+  const is_superuser = active_user?.is_superuser || false;
 
 
   useEffect(() => {
@@ -77,12 +80,20 @@ export const StatBox: React.FC<StatBoxProps> = ({
     setTempValue(newValue);
   };
 
-  const handleApply = () => {
-    setValue(applyOperation(value, operation, tempValue));
+  const handleApply = async () => {
+    const result = await applyOperation(value, operation, tempValue);
+    setValue(result);
     setIsPickerOpen(false);
   };
 
   const toggleOperation = () => {
+
+    const is_switching_to_add = operation === 'subtract';
+    if (is_switching_to_add && !is_superuser)
+    {
+      return
+    }
+
     setOperation(prev => prev === 'add' ? 'subtract' : 'add');
   };
 
@@ -195,7 +206,7 @@ export const TimeModifier: React.FC<PickerProps> = ({ value, onChange, onApply, 
         />
         <div className="mb-2 bg-white bg-opacity-70 rounded p-2">
           <ToggleSwitch
-            checked={operation === 'add'} 
+            checked={operation === 'add'}
             onChange={onToggleOperation}
             addLabel="Add Time"
             subtractLabel="Subtract Time"

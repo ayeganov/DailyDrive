@@ -1,10 +1,12 @@
 "use client";
 
 import assert from 'assert';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { useAuth } from '../AuthContext';
 import { useRouter } from 'next/navigation';
-import { StatBox, TimeModifier, PositiveIntegerPicker, timeOperation, starsOperation } from '../StatBox';
+import { StatBox, TimeModifier, PositiveIntegerPicker } from '../StatBox';
+import { update_reward_stars, update_reward_time } from '../Utils';
+import { MONEY_PER_STAR_POINT } from '../Constants';
 
 
 interface UserStatsCardProps {
@@ -14,7 +16,6 @@ interface UserStatsCardProps {
   tvTime: number;
   pendingTvTime: number;
   pendingPoints: number;
-  moneyEquivalent: number;
 }
 
 
@@ -42,9 +43,9 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   tvTime,
   pendingTvTime,
   pendingPoints,
-  moneyEquivalent
 }) => {
 
+  const [ money, setMoney ] = useState(totalPoints * MONEY_PER_STAR_POINT);
   const router = useRouter();
   const { active_user } = useAuth();
 
@@ -56,10 +57,29 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   const pendingTVTimeDisplay = convert_minutes_to_display_time(pendingTvTime);
   const gameTimeDisplay: string = convert_minutes_to_display_time(gameTime, false);
   const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
+  const pendingMoney = pendingPoints * MONEY_PER_STAR_POINT;
 
+  useEffect(() => {
+    setMoney(totalPoints * MONEY_PER_STAR_POINT);
+  }, [totalPoints]);
+
+  const update_star_points = async (value: number, operation: string, amount: number) =>   {
+    const new_stars_str = await update_reward_stars(active_user.id, 'star_points', value, operation, amount);
+    const new_stars = parseInt(new_stars_str);
+    setMoney(new_stars * MONEY_PER_STAR_POINT);
+    return new_stars_str;
+  }
 
   const handleAvatarClick = () => {
-    router.push('/dashboard');
+    if(active_user === null || active_user === undefined)
+    {
+      return;
+    }
+
+    if(active_user.is_superuser)
+    {
+      router.push('/dashboard');
+    }
   };
 
   return (
@@ -80,7 +100,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
                  initialValue={gameTimeDisplay}
                  defaultValue="00:00"
                  renderPicker={TimeModifier}
-                 applyOperation={timeOperation}
+                 applyOperation={(...args: any[]) => update_reward_time(active_user.id, 'game_time', ...args)}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -93,7 +113,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
                  initialValue={tvTimeDisplay}
                  defaultValue="00:00"
                  renderPicker={TimeModifier}
-                 applyOperation={timeOperation}
+                 applyOperation={(...args: any[]) => update_reward_time(active_user.id, 'tv_time', ...args)}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -106,7 +126,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
                  initialValue={totalPoints}
                  defaultValue={0}
                  renderPicker={PositiveIntegerPicker}
-                 applyOperation={starsOperation}
+                 applyOperation={update_star_points}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -116,8 +136,8 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
 
           <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
             <div className="font-medium">💵 Value</div>
-            <div className="text-lg font-bold">${moneyEquivalent.toFixed(2)}</div>
-            <span className={`text-xs text-white opacity-80`}>USD</span>
+            <div className="text-lg font-bold">${money.toFixed(2)}</div>
+            <span className={`text-xs text-white opacity-80`}>${pendingMoney.toFixed(2)}</span>
           </div>
       </div>
     </div>

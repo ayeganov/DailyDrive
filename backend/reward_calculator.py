@@ -16,7 +16,6 @@ HORIZONTAL_TRIPLET_AWARD_MINUTES = 30
 VERTICAL_TRIPLET_AWARD_MINUTES = 5
 SINGLE_TRIPLET_PENALTY_MINUTES = 20
 PERFECT_DAY_AWARD_MINUTES = 30
-MONEY_PER_STAR_POINT = 0.2
 
 
 def calculate_reward_times(scores: WeekScores) -> WeekScores:
@@ -35,7 +34,6 @@ def calculate_reward_times(scores: WeekScores) -> WeekScores:
     if scores.full_X_columns:
         scores.total_minutes += len(scores.full_X_columns) * PERFECT_DAY_AWARD_MINUTES
 
-    scores.money_equivalent = scores.total_points * MONEY_PER_STAR_POINT
     return scores
 
 
