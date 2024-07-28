@@ -114,7 +114,6 @@ class WeekScores(BaseModel):
     full_X_columns: List[int] = Field(default_factory=list)
     total_points: int = 0
     total_minutes: int = 0
-    money_equivalent: float = 0.0
 
 
 class UserRewardScores(BaseModel):

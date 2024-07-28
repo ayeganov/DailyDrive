@@ -20,11 +20,8 @@ const TimePicker: React.FC<TimePickerProps> = ({
   rangeClassName = '',
   maxHours = 23
 }) => {
-  console.log("initialTime: ", initialTime);
   const [hours, setHours] = useState(parseInt(initialTime.split(':')[0]));
   const [minutes, setMinutes] = useState(parseInt(initialTime.split(':')[1]));
-
-  console.log("hours: ", hours, "minutes: ", minutes);
 
   useEffect(() => {
     const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;

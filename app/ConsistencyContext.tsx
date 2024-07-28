@@ -2,6 +2,7 @@
 
 import axios from 'axios';
 import React, { createContext, useContext, useState } from 'react';
+import { Rewards } from './types';
 
 
 interface ConsistencyScores
@@ -12,15 +13,6 @@ interface ConsistencyScores
   verticalXTriplets: number[][][];
   totalPoints: number;
   totalMinutes: number;
-  moneyEquivalent: number;
-};
-
-
-interface Rewards
-{
-  total_points: number;
-  tv_time: number;
-  game_time: number;
 };
 
 
@@ -45,11 +37,10 @@ const useConsistencyState = () =>
     verticalXTriplets: [],
     totalPoints: 0,
     totalMinutes: 0,
-    moneyEquivalent: 0,
   });
 
   const [reward, setReward] = useState<Rewards>({
-    total_points: 0,
+    star_points: 0,
     tv_time: 0,
     game_time: 0,
   });
@@ -70,11 +61,10 @@ const useConsistencyState = () =>
         verticalXTriplets: week_scores.vertical_X_triplets,
         totalPoints: week_scores.total_points,
         totalMinutes: week_scores.total_minutes,
-        moneyEquivalent: week_scores.money_equivalent,
       });
 
       setReward({
-        total_points: data.reward.star_points,
+        star_points: data.reward.star_points,
         tv_time: data.reward.tv_time_points,
         game_time: data.reward.game_time_points,
       });

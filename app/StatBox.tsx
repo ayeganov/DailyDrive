@@ -10,7 +10,7 @@ interface StatBoxProps {
   defaultValue: string | number;
   renderContent?: (props: { value: string | number }) => React.ReactNode;
   renderPicker: (props: PickerProps) => React.ReactNode;
-  applyOperation: (currentValue: string | number, operation: 'add' | 'subtract', amount: string | number) => string | number;
+  applyOperation: (currentValue: string | number, operation: 'add' | 'subtract', amount: string | number) => Promise<string | number>;
 }
 
 
@@ -43,7 +43,6 @@ export function timeOperation(currentValue: string, operation: 'add' | 'subtract
   const newMinutes = Math.abs(newTotalMinutes % 60);
 
   return `${sign}${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
-
 };
 
 
@@ -81,8 +80,9 @@ export const StatBox: React.FC<StatBoxProps> = ({
     setTempValue(newValue);
   };
 
-  const handleApply = () => {
-    setValue(applyOperation(value, operation, tempValue));
+  const handleApply = async () => {
+    const result = await applyOperation(value, operation, tempValue);
+    setValue(result);
     setIsPickerOpen(false);
   };
 

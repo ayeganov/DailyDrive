@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Annotated, List, Optional
 from uuid import UUID
-import uuid
+from operator import add, sub
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from .chore_repository import ChoreRepository, ChoreHistoryRepository, get_chore_db, get_chore_history_db
 from .database import create_db_and_tables
 from .dependencies import superuser_required
-from .models import ChoreTable, CurrentReward, UiChore, UiFamily, UiUser, User, UserFamily, UserRewardScores
+from .models import ChoreTable, CurrentReward, Reward, UiChore, UiUser, User, UserFamily, UserRewardScores
 from .reward_calculator import ChoresResult, find_regularities_with_locations, archive_and_reset_user_chores
 from .reward_repository import RewardRepository, get_reward_db
 from .settings import DailyDriveSettings
@@ -26,6 +26,11 @@ from .user_repository import (FamilyRepository, FamilyResult, UserCreate, UserMa
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+OP_MAP = {
+    "add": add,
+    "subtract": sub
+}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -104,7 +109,7 @@ async def update_chore(chore_id: UUID,
 @app.delete("/api/v1/chores/{chore_id}", response_model=UiChore, tags=["chores"])
 async def delete_chore(chore_id: UUID,
                        chore_repo: ChoreRepository = Depends(get_chore_db),
-                       _=Depends(current_active_user)):
+                       _ = Depends(current_active_user)):
     logger.info("Deleting a chore: %s", chore_id)
     return await chore_repo.delete(chore_id)
 
@@ -137,6 +142,7 @@ async def get_scores(chore_table: ChoreTable,
             tv_time_points=reward.tv_time_points,
             game_time_points=reward.game_time_points
         )
+        print(f"Found reward: {reward.star_points}, {reward.tv_time_points}, {reward.game_time_points}")
 
     print(f"{user_reward_score=}")
     return user_reward_score
@@ -164,6 +170,17 @@ class FamilyAddMember(BaseModel):
 class FamilyGet(BaseModel):
     family_id: Optional[UUID] = None
     user_id: Optional[UUID] = None
+
+
+class RewardUpdate(BaseModel):
+    operation: str
+    reward: str
+    amount: int
+    target_user_id: UUID
+
+
+class UpdateResult(BaseModel):
+    value: float | str
 
 
 @app.post("/api/v1/families", dependencies=[Depends(superuser_required)])
@@ -225,6 +242,66 @@ async def get_family(
         return await make_family_result(families[0], family_repo)
     else:
         return make_family_error("Please provide a family_id or user_id")
+
+
+@app.get("/api/v1/rewards")
+async def get_rewards(
+    reward_repo: Annotated[RewardRepository, Depends(get_reward_db)],
+    current_user: Annotated[User, Depends(current_active_user)],
+    user_id: Optional[UUID] = Query(None, description="ID of the user to retrieve rewards for"),
+) -> CurrentReward:
+
+    # TODO: make sure that super user is a member of the family of the passed user_id
+    either_super_or_self = current_user.is_superuser or user_id == current_user.id
+
+    if not either_super_or_self:
+        raise HTTPException(status_code=403, detail="Only superusers or the user themselves can view rewards")
+
+    reward = await reward_repo.get_single_by_user_id(user_id)
+    if reward is None:
+        print(f"User {user_id} has no rewards")
+        return CurrentReward()
+
+    return CurrentReward(
+        star_points=reward.star_points,
+        tv_time_points=reward.tv_time_points,
+        game_time_points=reward.game_time_points
+    )
+
+
+@app.post("/api/v1/rewards/update")
+async def update_rewards(
+    reward_op: RewardUpdate,
+    reward_repo: Annotated[RewardRepository, Depends(get_reward_db)],
+    current_user: Annotated[User, Depends(current_active_user)],
+) -> UpdateResult:
+
+    reward = await reward_repo.get_single_by_user_id(reward_op.target_user_id)
+    if reward is None:
+        print("User has no rewards, creating new reward")
+        reward = Reward(user_id=reward_op.target_user_id)
+        reward = await reward_repo.add_entity(reward)
+
+    if reward_op.operation == "add":
+        if not current_user.is_superuser:
+            raise HTTPException(status_code=403, detail="Only superusers can add rewards")
+    elif reward_op.operation == "subtract":
+        if not current_user.is_superuser and reward_op.target_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Reward owners or superusers can subtract")
+
+    result = UpdateResult(value=0)
+    if reward_op.reward == "star_points":
+        reward.star_points = OP_MAP[reward_op.operation](reward.star_points, reward_op.amount)
+        result.value = reward.star_points
+    elif reward_op.reward == "tv_time":
+        reward.tv_time_points = max(0, OP_MAP[reward_op.operation](reward.tv_time_points, reward_op.amount))
+        result.value = reward.tv_time_points
+    elif reward_op.reward == "game_time":
+        reward.game_time_points = max(0, OP_MAP[reward_op.operation](reward.game_time_points, reward_op.amount))
+        result.value = reward.game_time_points
+
+    await reward_repo.update_entity(reward)
+    return result
 
 
 def main():

@@ -1,34 +1,35 @@
 import React from 'react';
-import { FamilyMember } from '../types';
+import { FamilyMember, Rewards } from '../types';
 import DashboardUserStats from './DashboardUserStats';
 
 
 interface FamilyMembersListProps {
   familyMembers: FamilyMember[];
+  memberRewards: Rewards[];
 }
 
-const FamilyMembersList: React.FC<FamilyMembersListProps> = ({ familyMembers }) => {
-  const colors = [
-    'bg-gradient-to-r from-pink-400 to-purple-500',
-    'bg-gradient-to-r from-green-400 to-blue-500',
-    'bg-gradient-to-r from-yellow-400 to-orange-500',
-    'bg-gradient-to-r from-indigo-400 to-cyan-500',
-  ];
+const FamilyMembersList: React.FC<FamilyMembersListProps> = ({ familyMembers, memberRewards }) => {
+
+  const zipped = familyMembers.map((member, index) => {
+    return {
+      ...member,
+      ...memberRewards[index]
+    };
+  });
 
   return (
     <div className="w-full max-w-fit mx-auto">
-      <div className="bg-white bg-opacity-20 rounded-3xl shadow-lg inline-block">
-        {familyMembers.map((member, index) => (
+      <div className="rounded-3xl inline-block">
+        {zipped.map((member) => (
           <div
             key={member.id}
-            className={`${colors[index % colors.length]} ${index !== 0 ? 'border-t border-white border-opacity-20' : ''}`}
+            className="p-1"
           >
             <DashboardUserStats
               user={member}
-              gameTime={member.gameTime}
-              tvTime={member.tvTime}
-              stars={member.stars}
-              moneyEquivalent={member.moneyEquivalent}
+              gameTime={member.game_time}
+              tvTime={member.tv_time}
+              stars={member.star_points}
             />
           </div>
         ))}

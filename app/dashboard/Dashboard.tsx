@@ -9,20 +9,25 @@ import { useRouter } from 'next/navigation';
 import ColoredText from '../ColoredText';
 import { FamilyMember } from '../types';
 import FamilyMembersList from './FamilyMemberList';
-import DashboardUserStats from './DashboardUserStats';
+import { Rewards } from '../types';
 
 
 const Dashboard: React.FC = () => {
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
-  const [familyId, setFamilyId] = useState<string | null>(null);
+  const [ familyMembers, setFamilyMembers ] = useState<FamilyMember[]>([]);
+  const [ memberRewards, setMemberRewards ] = useState<Rewards[]>([]);
+  const [ familyId, setFamilyId ] = useState<string | null>(null);
   const { active_user } = useAuth();
   const { showAlert } = useAlert();
   const router = useRouter();
 
   useEffect(() => {
+    if (active_user === null) {
+      router.push('/');
+      return;
+    }
+
     const fetchFamilyData = async () => {
       try {
-        console.log('Fetching family data for user:', active_user);
         const params = { user_id: active_user?.id };
         const response = await axios.get('/backend/api/v1/families', { params });
 
@@ -30,22 +35,24 @@ const Dashboard: React.FC = () => {
 
         if (result.ok) {
           const members = result.ok.members;
-          const family_members = members.map((member: any) => ({
-            id: member.id,
-            name: member.name,
-            email: member.email,
-            is_superuser: member.is_superuser,
-            token: '',
-            gameTime: Math.floor(Math.random() * 100),
-            tvTime: Math.floor(Math.random() * 100),
-            stars: Math.floor(Math.random() * 1000),
-            moneyEquivalent: Math.random() * 100,
-          }));
+          const rewards = [];
+          for (let member of members)
+          {
+            const params = { user_id: member.id };
+            const response = await axios.get('/backend/api/v1/rewards', { params });
+            const member_rewards = response.data;
 
-          setFamilyMembers(family_members);
+            rewards.push({
+              star_points: member_rewards.star_points,
+              tv_time: member_rewards.tv_time_points,
+              game_time: member_rewards.game_time_points,
+            });
+          }
+
+          setFamilyMembers(members);
+          setMemberRewards(rewards);
           setFamilyId(result.ok.id);
         } else {
-          console.error('Error fetching family data:', result);
           showAlert('Error fetching family data', 'error');
         }
       } catch (error) {
@@ -65,6 +72,10 @@ const Dashboard: React.FC = () => {
     router.push('/');
   };
 
+  if (active_user === null) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div id="fam-dashboard" className="min-h-screen w-full bg-gray-100">
       <div className="container mx-auto p-4">
@@ -79,7 +90,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="mb-8">
-          <FamilyMembersList familyMembers={familyMembers} />
+          <FamilyMembersList familyMembers={familyMembers} memberRewards={memberRewards}/>
         </div>
 
         <div className="card bg-white shadow-xl">
