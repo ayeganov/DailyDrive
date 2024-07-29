@@ -1,3 +1,4 @@
+from enum import Enum
 import uuid
 from typing import Optional, Union
 
@@ -7,8 +8,7 @@ from fastapi_users import (BaseUserManager, FastAPIUsers,
 from fastapi_users.authentication import (AuthenticationBackend,
                                           BearerTransport, JWTStrategy)
 #from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
-from fastapi_users.db import BaseUserDatabase, SQLAlchemyUserDatabase
-from fastapi_users.exceptions import InvalidID
+from fastapi_users.db import SQLAlchemyUserDatabase
 from password_validator import PasswordValidator
 from pydantic import Json
 from sqlalchemy import inspect, select
@@ -160,6 +160,15 @@ async def get_current_user(user: User = Depends(current_active_user)):
 FamilyResult = GenericResult[UiFamily, Json]
 
 
+class FamilyErrorCode(Enum):
+    FAMILY_NOT_FOUND = 1
+    FAMILY_ALREADY_EXISTS = 2
+    FAMILY_MEMBER_ALREADY_EXISTS = 3
+    FAMILY_MEMBER_NOT_FOUND = 4
+    FAMILY_MEMBER_NOT_IN_FAMILY = 5
+    USER_NOT_IN_FAMILY = 6
+
+
 async def make_family_result(family: UserFamily, family_repo: FamilyRepository) -> FamilyResult:
 
     members_loaded = inspect(family).attrs["members"].loaded_value is not NO_VALUE
@@ -174,5 +183,5 @@ async def make_family_result(family: UserFamily, family_repo: FamilyRepository) 
     return FamilyResult.model_construct(result=Ok(ok=UiFamily.model_validate(loaded_family)))
 
 
-def make_family_error(message: str) -> FamilyResult:
-    return FamilyResult.model_construct(result=Err(error={"message": message}))
+def make_family_error(message: str, code: FamilyErrorCode) -> FamilyResult:
+    return FamilyResult.model_construct(result=Err(error={"message": message, "code": code}))

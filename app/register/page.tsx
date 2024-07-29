@@ -79,7 +79,7 @@ const RegisterPage: React.FC = () => {
 
     <div id="login-register" className="min-h-screen bg-gray-100 flex flex-col justify-center sm:py-12">
       <div className="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
-        <h1 className="font-bold text-center text-3xl mb-5 lucky-font text-cyan-500" style={{ letterSpacing: "3px", WebkitTextStroke: "1px white" }}>Login</h1>
+        <h1 className="font-bold text-center text-3xl mb-5 lucky-font text-cyan-500" style={{ letterSpacing: "3px", WebkitTextStroke: "1px white" }}>Register</h1>
         <div className="bg-violet-700 shadow w-full rounded-lg border-4 border-white">
           <form onSubmit={handleSubmit} className="px-5 py-7">
             {error && (

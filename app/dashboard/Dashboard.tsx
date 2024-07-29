@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import ColoredText from '../ColoredText';
 import { FamilyMember } from '../types';
 import FamilyMembersList from './FamilyMemberList';
+import CreateFamilyForm from './CreateFamilyForm';
 import { Rewards } from '../types';
 
 
@@ -20,49 +21,62 @@ const Dashboard: React.FC = () => {
   const { showAlert } = useAlert();
   const router = useRouter();
 
+  const fetchFamilyData = async () => {
+    try {
+      const params = { user_id: active_user?.id };
+      const response = await axios.get('/backend/api/v1/families', { params });
+
+      const result = response.data.result;
+
+      if (result.ok) {
+        setFamilyMembers(result.ok.members);
+        setFamilyId(result.ok.id);
+      }
+      else if (result.error)
+      {
+        console.error('Error fetching family data:', result.error.message);
+      }
+    }
+    catch (error)
+    {
+      console.error('Error fetching family data:', error);
+      showAlert('Error fetching family data', error);
+    }
+  };
+
+  const fetchRewards = async () => {
+    const rewards = [];
+    for (let member of familyMembers)
+    {
+      const params = { user_id: member.id };
+      const response = await axios.get('/backend/api/v1/rewards', { params });
+      const member_rewards = response.data;
+
+      rewards.push({
+        star_points: member_rewards.star_points,
+        tv_time: member_rewards.tv_time_points,
+        game_time: member_rewards.game_time_points,
+      });
+    }
+
+    setMemberRewards(rewards);
+  }
+
   useEffect(() => {
     if (active_user === null) {
       router.push('/');
       return;
     }
 
-    const fetchFamilyData = async () => {
-      try {
-        const params = { user_id: active_user?.id };
-        const response = await axios.get('/backend/api/v1/families', { params });
-
-        const result = response.data.result;
-
-        if (result.ok) {
-          const members = result.ok.members;
-          const rewards = [];
-          for (let member of members)
-          {
-            const params = { user_id: member.id };
-            const response = await axios.get('/backend/api/v1/rewards', { params });
-            const member_rewards = response.data;
-
-            rewards.push({
-              star_points: member_rewards.star_points,
-              tv_time: member_rewards.tv_time_points,
-              game_time: member_rewards.game_time_points,
-            });
-          }
-
-          setFamilyMembers(members);
-          setMemberRewards(rewards);
-          setFamilyId(result.ok.id);
-        } else {
-          showAlert('Error fetching family data', 'error');
-        }
-      } catch (error) {
-        console.error('Error fetching family data:', error);
-        showAlert('Error fetching family data', 'error');
-      }
-    };
-
     fetchFamilyData();
-  }, [active_user]);
+  }, [active_user, familyId]);
+
+
+  useEffect(() => {
+    if (familyMembers.length > 0) {
+      fetchRewards();
+    }
+  }, [familyMembers]);
 
   const handleAddMember = (newMember: FamilyMember) => {
     setFamilyMembers([...familyMembers, newMember]);
@@ -75,6 +89,10 @@ const Dashboard: React.FC = () => {
   if (active_user === null) {
     return <div>Loading...</div>;
   }
+
+  const component = familyId === null
+    ? <CreateFamilyForm onUpdate={setFamilyId} />
+    : <AddMemberForm familyId={familyId} onAddMember={handleAddMember} />;
 
   return (
     <div id="fam-dashboard" className="min-h-screen w-full bg-gray-100">
@@ -93,16 +111,7 @@ const Dashboard: React.FC = () => {
           <FamilyMembersList familyMembers={familyMembers} memberRewards={memberRewards}/>
         </div>
 
-        <div className="card bg-white shadow-xl">
-          <div className="card-body">
-            <h2 className="card-title mb-4">Add New Family Member</h2>
-            {familyId ? (
-              <AddMemberForm familyId={familyId} onAddMember={handleAddMember} />
-            ) : (
-              <p>Loading family information...</p>
-            )}
-          </div>
-        </div>
+        {component}
       </div>
     </div>
   );

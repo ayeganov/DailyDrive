@@ -10,7 +10,7 @@ import { MONEY_PER_STAR_POINT } from '../Constants';
 
 
 interface UserStatsCardProps {
-  totalPoints: number;
+  starPoints: number;
   gameTime: number;
   pendingGameTime: number;
   tvTime: number;
@@ -37,7 +37,7 @@ function convert_minutes_to_display_time(minutes: number, show_sign: boolean = t
 
 
 const UserStatsCard: React.FC<UserStatsCardProps> = ({
-  totalPoints,
+  starPoints,
   gameTime,
   pendingGameTime,
   tvTime,
@@ -45,7 +45,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   pendingPoints,
 }) => {
 
-  const [ money, setMoney ] = useState(totalPoints * MONEY_PER_STAR_POINT);
+  const [ money, setMoney ] = useState(starPoints * MONEY_PER_STAR_POINT);
   const router = useRouter();
   const { active_user } = useAuth();
 
@@ -60,8 +60,8 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   const pendingMoney = pendingPoints * MONEY_PER_STAR_POINT;
 
   useEffect(() => {
-    setMoney(totalPoints * MONEY_PER_STAR_POINT);
-  }, [totalPoints]);
+    setMoney(starPoints * MONEY_PER_STAR_POINT);
+  }, [starPoints]);
 
   const update_star_points = async (value: number, operation: string, amount: number) =>   {
     const new_stars_str = await update_reward_stars(active_user.id, 'star_points', value, operation, amount);
@@ -123,7 +123,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
 
         <StatBox icon="🌟"
                  label="Stars"
-                 initialValue={totalPoints}
+                 initialValue={starPoints}
                  defaultValue={0}
                  renderPicker={PositiveIntegerPicker}
                  applyOperation={update_star_points}

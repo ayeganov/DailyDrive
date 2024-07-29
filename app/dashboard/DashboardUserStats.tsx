@@ -41,10 +41,11 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
   stars,
 }) => {
 
-  const [ money, setMoney ] = useState(stars * MONEY_PER_STAR_POINT);
+  const [ money, setMoney ] = useState(stars !== undefined ? stars * MONEY_PER_STAR_POINT : 0);
   const { showAlert } = useAlert();
   const gameTimeDisplay: string = convert_minutes_to_display_time(gameTime, false);
   const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
+
 
   const update_star_points = async (value: number, operation: string, amount: number) =>   {
     const new_stars_str = await update_reward_stars(user.id, 'star_points', value, operation, amount);
@@ -128,7 +129,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
         </div>
 
         <div className="text-center sm:text-right whitespace-nowrap">
-          <div onClick={handle_week_end} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
+          <div onClick={handle_week_end} className="transition duration-200 mx-5 px-5 py-5 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
             <span className="inline-block ml-1 lucky-font text-yellow-200">End Week</span>
           </div>
         </div>

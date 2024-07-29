@@ -68,32 +68,6 @@ const ChoreChart: React.FC = () => {
     update_consistency_data(new_chores);
   };
 
-
-  const handle_week_end = async () =>
-  {
-    const response = await axios.post('/backend/api/v1/end_week');
-    // handle http errors first
-    if(response.status !== 200)
-    {
-      showAlert("Failed to process week end", 'error');
-      return;
-    }
-
-
-    const result = response.data.result;
-    console.log('Week end result:', result);
-    if(result.ok)
-    {
-      const new_chores = result.ok;
-      setChores(new_chores);
-      update_consistency_data(new_chores);
-    }
-    else if(result.error)
-    {
-      showAlert(result.error.message, 'error');
-    }
-  }
-
   const handle_delete_chore = async (id: string) =>
   {
     await axios.delete(`/backend/api/v1/chores/${id}`);
@@ -129,7 +103,7 @@ const ChoreChart: React.FC = () => {
 
   const userData = {
     avatarUrl: "/path-to-user-avatar.jpg",
-    totalPoints: reward.star_points,
+    starPoints: reward.star_points,
     gameTime: reward.game_time,
     pendingGameTime: scores.totalMinutes,
     tvTime: reward.tv_time,
