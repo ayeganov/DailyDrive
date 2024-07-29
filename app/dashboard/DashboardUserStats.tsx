@@ -1,10 +1,12 @@
 "use client";
 
 import React, {useState} from 'react';
+import axios from 'axios';
 import { FamilyMember } from '../types';
 import { StatBox, TimeModifier, PositiveIntegerPicker } from '../StatBox';
 import { update_reward_stars, update_reward_time } from '../Utils';
 import {MONEY_PER_STAR_POINT} from '../Constants';
+import { useAlert } from '../AlertContext';
 
 
 interface DashboardUserStatsProps {
@@ -40,6 +42,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
 }) => {
 
   const [ money, setMoney ] = useState(stars * MONEY_PER_STAR_POINT);
+  const { showAlert } = useAlert();
   const gameTimeDisplay: string = convert_minutes_to_display_time(gameTime, false);
   const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
 
@@ -48,6 +51,26 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
     const new_stars = parseInt(new_stars_str);
     setMoney(new_stars * MONEY_PER_STAR_POINT);
     return new_stars_str;
+  }
+
+  const handle_week_end = async () =>
+  {
+    const params = { user_id: user.id };
+    const response = await axios.post('/backend/api/v1/end_week', {}, { params });
+    // handle http errors first
+    if(response.status !== 200)
+    {
+      showAlert("Failed to process week end", 'error');
+      return;
+    }
+
+
+    const result = response.data.result;
+    console.log('Week end result:', result);
+    if(result.error)
+    {
+      showAlert(result.error.message, 'error');
+    }
   }
 
   return (
@@ -99,10 +122,16 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                    </div>)}
         />
 
-          <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
-            <div className="font-medium">💵 Value</div>
-            <div className="text-lg font-bold">${money.toFixed(2)}</div>
+        <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
+          <div className="font-medium">💵 Value</div>
+          <div className="text-lg font-bold">${money.toFixed(2)}</div>
+        </div>
+
+        <div className="text-center sm:text-right whitespace-nowrap">
+          <div onClick={handle_week_end} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
+            <span className="inline-block ml-1 lucky-font text-yellow-200">End Week</span>
           </div>
+        </div>
       </div>
     </div>
   );

@@ -114,13 +114,19 @@ async def delete_chore(chore_id: UUID,
     return await chore_repo.delete(chore_id)
 
 
-@app.post("/api/v1/end_week", tags=["chores"])
+@app.post("/api/v1/end_week", tags=["chores"], dependencies=[Depends(superuser_required)])
 async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db),
                    chore_history_repo: ChoreHistoryRepository = Depends(get_chore_history_db),
                    reward_repo: RewardRepository = Depends(get_reward_db),
-                   user = Depends(current_active_user)) -> ChoresResult:
-    print(f"Ending the week for user {user.id}")
-    result = await archive_and_reset_user_chores(user.id, chore_repo, chore_history_repo, reward_repo)
+                   _ = Depends(current_active_user),
+                   user_id: Optional[UUID] = Query(None, description="ID of the user to retrieve families for"),
+                   ) -> ChoresResult:
+    # TODO: make sure that super user is a member of the family of the passed user_id
+    print(f"Ending the week for user {user_id}")
+    if user_id is None:
+        raise HTTPException(status_code=400, detail="Please provide a user_id")
+
+    result = await archive_and_reset_user_chores(user_id, chore_repo, chore_history_repo, reward_repo)
     print(f"{result=}")
     return result
 

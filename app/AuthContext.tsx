@@ -135,7 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = (email: string) => {
-//    console.log("Removing user from local storage:", email);
     const updated_users = new Map(users);
     updated_users.delete(email);
     setUsers(updated_users);

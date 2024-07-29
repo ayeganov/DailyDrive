@@ -146,11 +146,6 @@ const ChoreChart: React.FC = () => {
           </Link>
           <UserStatsCard {...userData} />
           <div className="text-center sm:text-right whitespace-nowrap">
-            <div onClick={handle_week_end} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
-              <span className="inline-block ml-1 lucky-font text-yellow-200">End Week</span>
-            </div>
-          </div>
-          <div className="text-center sm:text-right whitespace-nowrap">
             <div onClick={handle_log_out} className="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
               <span className="inline-block ml-1 lucky-font text-zinc-200">Logout</span>
             </div>
