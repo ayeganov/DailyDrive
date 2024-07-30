@@ -1,10 +1,12 @@
 "use client";
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
+import axios from 'axios';
 import { FamilyMember } from '../types';
 import { StatBox, TimeModifier, PositiveIntegerPicker } from '../StatBox';
 import { update_reward_stars, update_reward_time } from '../Utils';
 import {MONEY_PER_STAR_POINT} from '../Constants';
+import { useAlert } from '../AlertContext';
 
 
 interface DashboardUserStatsProps {
@@ -12,6 +14,7 @@ interface DashboardUserStatsProps {
   gameTime: number;
   tvTime: number;
   stars: number;
+  onWeekEnd: (user_id: string) => void;
 }
 
 
@@ -37,17 +40,49 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
   gameTime,
   tvTime,
   stars,
+  onWeekEnd
 }) => {
 
-  const [ money, setMoney ] = useState(stars * MONEY_PER_STAR_POINT);
+  const [ money, setMoney ] = useState(stars !== undefined ? stars * MONEY_PER_STAR_POINT : 0);
+  const { showAlert } = useAlert();
   const gameTimeDisplay: string = convert_minutes_to_display_time(gameTime, false);
   const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
 
-  const update_star_points = async (value: number, operation: string, amount: number) =>   {
+  useEffect(() => {
+    if(stars !== undefined && stars !== null)
+    {
+      setMoney(stars * MONEY_PER_STAR_POINT);
+    }
+  }, [stars]);
+
+  const update_star_points = async (value: string|number, operation: string, amount: string|number) =>   {
     const new_stars_str = await update_reward_stars(user.id, 'star_points', value, operation, amount);
     const new_stars = parseInt(new_stars_str);
     setMoney(new_stars * MONEY_PER_STAR_POINT);
     return new_stars_str;
+  }
+
+  const handle_week_end = async () =>
+  {
+    const params = { user_id: user.id };
+    const response = await axios.post('/backend/api/v1/end_week', {}, { params });
+    // handle http errors first
+    if(response.status !== 200)
+    {
+      showAlert("Failed to process week end", 'error');
+      return;
+    }
+
+
+    const result = response.data.result;
+    if(result.error)
+    {
+      showAlert(result.error.message, 'error');
+    }
+    else if(result.ok)
+    {
+      onWeekEnd(user.id);
+    }
   }
 
   return (
@@ -68,7 +103,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                  initialValue={gameTimeDisplay}
                  defaultValue="00:00"
                  renderPicker={TimeModifier}
-                 applyOperation={(...args: any[]) => update_reward_time(user.id, 'game_time', ...args)}
+                 applyOperation={(val, op, amount) => update_reward_time(user.id, 'tv_time', val, op, amount)}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -80,7 +115,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                  initialValue={tvTimeDisplay}
                  defaultValue="00:00"
                  renderPicker={TimeModifier}
-                 applyOperation={(...args: any[]) => update_reward_time(user.id, 'tv_time', ...args)}
+                 applyOperation={(val, op, amount) => update_reward_time(user.id, 'tv_time', val, op, amount)}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -99,10 +134,16 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                    </div>)}
         />
 
-          <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
-            <div className="font-medium">💵 Value</div>
-            <div className="text-lg font-bold">${money.toFixed(2)}</div>
+        <div className="bg-white bg-opacity-20 rounded-xl p-2 text-white">
+          <div className="font-medium">💵 Value</div>
+          <div className="text-lg font-bold">${money.toFixed(2)}</div>
+        </div>
+
+        <div className="text-center sm:text-right whitespace-nowrap">
+          <div onClick={handle_week_end} className="transition duration-200 mx-5 px-5 py-5 cursor-pointer font-normal text-4xl rounded-lg text-gray-500 focus:outline-none focus:bg-orange-400 hover:bg-orange-400 ring-inset inline-block">
+            <span className="inline-block ml-1 lucky-font text-yellow-200">End Week</span>
           </div>
+        </div>
       </div>
     </div>
   );

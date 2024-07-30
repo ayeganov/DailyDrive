@@ -1,7 +1,8 @@
+import assert from 'assert';
 import axios from 'axios';
 
 
-export async function update_reward_stars(user_id: string, reward: string, _value: number, operation: string, amount: number): Promise<string>
+export async function update_reward_stars(user_id: string, reward: string, _value: string|number, operation: string, amount: string|number): Promise<string>
 {
   const reward_update = { operation: operation, reward: reward, amount: amount, target_user_id: user_id };
 
@@ -10,8 +11,9 @@ export async function update_reward_stars(user_id: string, reward: string, _valu
 }
 
 
-export async function update_reward_time(user_id: string, reward: string, _value: string, operation: string, amount: string): Promise<string>
+export async function update_reward_time(user_id: string, reward: string, _value: string|number, operation: string, amount: string|number): Promise<string>
 {
+  assert(typeof amount === 'string', 'Amount must be a string');
   const [amountHours, amountMinutes] = amount.split(':').map(Number);
 
   const amountTotalMinutes = amountHours * 60 + amountMinutes;

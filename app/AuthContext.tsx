@@ -57,7 +57,7 @@ const restore_logged_users = (): Map<string, User> => {
   const users = get_users_from_local_storage();
   const valid_users = users.filter((user) => !is_token_expired(user.token));
 //  console.log("Valid users:", valid_users);
-  return new Map(valid_users.map(user => [user.name, user]));
+  return new Map(valid_users.map(user => [user.email, user]));
 };
 
 
@@ -135,7 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = (email: string) => {
-//    console.log("Removing user from local storage:", email);
     const updated_users = new Map(users);
     updated_users.delete(email);
     setUsers(updated_users);

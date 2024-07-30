@@ -19,7 +19,7 @@ from .models import ChoreTable, CurrentReward, Reward, UiChore, UiUser, User, Us
 from .reward_calculator import ChoresResult, find_regularities_with_locations, archive_and_reset_user_chores
 from .reward_repository import RewardRepository, get_reward_db
 from .settings import DailyDriveSettings
-from .user_repository import (FamilyRepository, FamilyResult, UserCreate, UserManager, UserRead, UserUpdate, auth_backend,
+from .user_repository import (FamilyErrorCode, FamilyRepository, FamilyResult, UserCreate, UserManager, UserRead, UserUpdate, auth_backend,
                              current_active_user, fastapi_users,
                              get_family_repo, get_user_manager, make_family_error, make_family_result)
 
@@ -31,6 +31,10 @@ OP_MAP = {
     "add": add,
     "subtract": sub
 }
+
+MAX_TV_TIME = 60 * 28
+MAX_GAME_TIME = 60 * 28
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -114,13 +118,19 @@ async def delete_chore(chore_id: UUID,
     return await chore_repo.delete(chore_id)
 
 
-@app.post("/api/v1/end_week", tags=["chores"])
+@app.post("/api/v1/end_week", tags=["chores"], dependencies=[Depends(superuser_required)])
 async def end_week(chore_repo: ChoreRepository = Depends(get_chore_db),
                    chore_history_repo: ChoreHistoryRepository = Depends(get_chore_history_db),
                    reward_repo: RewardRepository = Depends(get_reward_db),
-                   user = Depends(current_active_user)) -> ChoresResult:
-    print(f"Ending the week for user {user.id}")
-    result = await archive_and_reset_user_chores(user.id, chore_repo, chore_history_repo, reward_repo)
+                   _ = Depends(current_active_user),
+                   user_id: Optional[UUID] = Query(None, description="ID of the user to retrieve families for"),
+                   ) -> ChoresResult:
+    # TODO: make sure that super user is a member of the family of the passed user_id
+    print(f"Ending the week for user {user_id}")
+    if user_id is None:
+        raise HTTPException(status_code=400, detail="Please provide a user_id")
+
+    result = await archive_and_reset_user_chores(user_id, chore_repo, chore_history_repo, reward_repo)
     print(f"{result=}")
     return result
 
@@ -197,7 +207,7 @@ async def create_family(
         print(f"Created family: {result}")
         return result
     except Exception as e:
-        return make_family_error(str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/v1/families/members", dependencies=[Depends(superuser_required)])
@@ -234,14 +244,18 @@ async def get_family(
     if family_id:
         family = await family_repo.get_by_id(family_id)
         if not family:
-            return make_family_error("Family not found")
+            return make_family_error("Family not found", FamilyErrorCode.FAMILY_NOT_FOUND)
         return await make_family_result(family, family_repo)
     elif user_id:
         families = await family_repo.get_user_families(user_id)
+
+        if not families:
+            return make_family_error("User has no families", FamilyErrorCode.USER_NOT_IN_FAMILY)
+
         assert len(families) <= 1, "User has too many families"
         return await make_family_result(families[0], family_repo)
     else:
-        return make_family_error("Please provide a family_id or user_id")
+        raise HTTPException(status_code=400, detail="Please provide a user_id or family_id")
 
 
 @app.get("/api/v1/rewards")
@@ -295,9 +309,11 @@ async def update_rewards(
         result.value = reward.star_points
     elif reward_op.reward == "tv_time":
         reward.tv_time_points = max(0, OP_MAP[reward_op.operation](reward.tv_time_points, reward_op.amount))
+        reward.tv_time_points = min(MAX_TV_TIME, reward.tv_time_points)
         result.value = reward.tv_time_points
     elif reward_op.reward == "game_time":
         reward.game_time_points = max(0, OP_MAP[reward_op.operation](reward.game_time_points, reward_op.amount))
+        reward.game_time_points = min(MAX_GAME_TIME, reward.game_time_points)
         result.value = reward.game_time_points
 
     await reward_repo.update_entity(reward)
