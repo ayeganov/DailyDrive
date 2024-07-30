@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import { FamilyMember } from '../types';
 import { StatBox, TimeModifier, PositiveIntegerPicker } from '../StatBox';
@@ -14,6 +14,7 @@ interface DashboardUserStatsProps {
   gameTime: number;
   tvTime: number;
   stars: number;
+  onWeekEnd: (user_id: string) => void;
 }
 
 
@@ -39,6 +40,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
   gameTime,
   tvTime,
   stars,
+  onWeekEnd
 }) => {
 
   const [ money, setMoney ] = useState(stars !== undefined ? stars * MONEY_PER_STAR_POINT : 0);
@@ -46,6 +48,12 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
   const gameTimeDisplay: string = convert_minutes_to_display_time(gameTime, false);
   const tvTimeDisplay = convert_minutes_to_display_time(tvTime, false);
 
+  useEffect(() => {
+    if(stars !== undefined && stars !== null)
+    {
+      setMoney(stars * MONEY_PER_STAR_POINT);
+    }
+  }, [stars]);
 
   const update_star_points = async (value: number, operation: string, amount: number) =>   {
     const new_stars_str = await update_reward_stars(user.id, 'star_points', value, operation, amount);
@@ -67,10 +75,13 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
 
 
     const result = response.data.result;
-    console.log('Week end result:', result);
     if(result.error)
     {
       showAlert(result.error.message, 'error');
+    }
+    else if(result.ok)
+    {
+      onWeekEnd(user.id);
     }
   }
 

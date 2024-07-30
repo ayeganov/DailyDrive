@@ -6,9 +6,10 @@ import DashboardUserStats from './DashboardUserStats';
 interface FamilyMembersListProps {
   familyMembers: FamilyMember[];
   memberRewards: Rewards[];
+  onWeekEnd: (user_id: string) => void;
 }
 
-const FamilyMembersList: React.FC<FamilyMembersListProps> = ({ familyMembers, memberRewards }) => {
+const FamilyMembersList: React.FC<FamilyMembersListProps> = ({ familyMembers, memberRewards, onWeekEnd }) => {
 
   const zipped = familyMembers.map((member, index) => {
     return {
@@ -30,6 +31,7 @@ const FamilyMembersList: React.FC<FamilyMembersListProps> = ({ familyMembers, me
               gameTime={member.game_time}
               tvTime={member.tv_time}
               stars={member.star_points}
+              onWeekEnd={onWeekEnd}
             />
           </div>
         ))}

@@ -17,6 +17,7 @@ const Dashboard: React.FC = () => {
   const [ familyMembers, setFamilyMembers ] = useState<FamilyMember[]>([]);
   const [ memberRewards, setMemberRewards ] = useState<Rewards[]>([]);
   const [ familyId, setFamilyId ] = useState<string | null>(null);
+  const [ weekEndedUser, setWeekEndedUser ] = useState<string | null>(null);
   const { active_user } = useAuth();
   const { showAlert } = useAlert();
   const router = useRouter();
@@ -76,7 +77,7 @@ const Dashboard: React.FC = () => {
     if (familyMembers.length > 0) {
       fetchRewards();
     }
-  }, [familyMembers]);
+  }, [familyMembers, weekEndedUser]);
 
   const handleAddMember = (newMember: FamilyMember) => {
     setFamilyMembers([...familyMembers, newMember]);
@@ -108,7 +109,9 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="mb-8">
-          <FamilyMembersList familyMembers={familyMembers} memberRewards={memberRewards}/>
+          <FamilyMembersList familyMembers={familyMembers}
+                             memberRewards={memberRewards}
+                             onWeekEnd={setWeekEndedUser} />
         </div>
 
         {component}

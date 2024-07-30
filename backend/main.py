@@ -32,6 +32,10 @@ OP_MAP = {
     "subtract": sub
 }
 
+MAX_TV_TIME = 60 * 28
+MAX_GAME_TIME = 60 * 28
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Not needed if you setup a migration system like Alembic
@@ -305,9 +309,11 @@ async def update_rewards(
         result.value = reward.star_points
     elif reward_op.reward == "tv_time":
         reward.tv_time_points = max(0, OP_MAP[reward_op.operation](reward.tv_time_points, reward_op.amount))
+        reward.tv_time_points = min(MAX_TV_TIME, reward.tv_time_points)
         result.value = reward.tv_time_points
     elif reward_op.reward == "game_time":
         reward.game_time_points = max(0, OP_MAP[reward_op.operation](reward.game_time_points, reward_op.amount))
+        reward.game_time_points = min(MAX_GAME_TIME, reward.game_time_points)
         result.value = reward.game_time_points
 
     await reward_repo.update_entity(reward)
