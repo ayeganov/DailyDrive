@@ -55,7 +55,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
     }
   }, [stars]);
 
-  const update_star_points = async (value: number, operation: string, amount: number) =>   {
+  const update_star_points = async (value: string|number, operation: string, amount: string|number) =>   {
     const new_stars_str = await update_reward_stars(user.id, 'star_points', value, operation, amount);
     const new_stars = parseInt(new_stars_str);
     setMoney(new_stars * MONEY_PER_STAR_POINT);
@@ -103,7 +103,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                  initialValue={gameTimeDisplay}
                  defaultValue="00:00"
                  renderPicker={TimeModifier}
-                 applyOperation={(...args: any[]) => update_reward_time(user.id, 'game_time', ...args)}
+                 applyOperation={(val, op, amount) => update_reward_time(user.id, 'tv_time', val, op, amount)}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>
@@ -115,7 +115,7 @@ const DashboardUserStats: React.FC<DashboardUserStatsProps> = ({
                  initialValue={tvTimeDisplay}
                  defaultValue="00:00"
                  renderPicker={TimeModifier}
-                 applyOperation={(...args: any[]) => update_reward_time(user.id, 'tv_time', ...args)}
+                 applyOperation={(val, op, amount) => update_reward_time(user.id, 'tv_time', val, op, amount)}
                  renderContent={({ value }) => (
                    <div className="flex flex-col items-center">
                      <div className="font-bold text-white text-lg">{value}</div>

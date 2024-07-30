@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { Chore } from "./types";
+import { Chore } from "../types";
 
 
 

@@ -1,10 +1,11 @@
+import assert from 'assert';
 import React, { useState, useEffect } from 'react';
 
 
 interface TimePickerProps
 {
   onChange?: (time: string) => void;
-  initialTime?: string;
+  initialTime?: string | number;
   className?: string;
   clockClassName?: string;
   rangeClassName?: string;
@@ -20,6 +21,8 @@ const TimePicker: React.FC<TimePickerProps> = ({
   rangeClassName = '',
   maxHours = 23
 }) => {
+  assert (typeof initialTime === 'string', "initialTime must be a string");
+
   const [hours, setHours] = useState(parseInt(initialTime.split(':')[0]));
   const [minutes, setMinutes] = useState(parseInt(initialTime.split(':')[1]));
 

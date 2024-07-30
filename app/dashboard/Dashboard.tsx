@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
     catch (error)
     {
       console.error('Error fetching family data:', error);
-      showAlert('Error fetching family data', error);
+      showAlert('Error fetching family data', 'error');
     }
   };
 
