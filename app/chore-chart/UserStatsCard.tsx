@@ -83,7 +83,7 @@ const UserStatsCard: React.FC<UserStatsCardProps> = ({
   };
 
   return (
-    <div className="card bg-gradient-to-r from-indigo-300 to-pink-400 shadow-lg rounded-3xl p-4 transition-all hover:shadow-xl">
+    <div className="card bg-gradient-to-r from-indigo-300 to-pink-400 shadow-lg rounded-3xl p-3 transition-all hover:shadow-xl">
       <div className="flex items-center space-x-4">
         <div className="avatar" onClick={handleAvatarClick}>
           <div className="w-16 h-16 rounded-full ring-2 ring-purple-300 ring-offset-2">

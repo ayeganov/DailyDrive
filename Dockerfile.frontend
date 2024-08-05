@@ -9,11 +9,6 @@ RUN npm ci
 
 # Copy the rest of the application code
 COPY . .
-RUN rm -f .env.local
-
-
-ARG NEXT_PUBLIC_PUBLIC_URL
-ENV NEXT_PUBLIC_PUBLIC_URL=$NEXT_PUBLIC_PUBLIC_URL
 
 
 # Build the application
