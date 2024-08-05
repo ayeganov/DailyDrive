@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_PUBLIC_URL=http://backend:8000/
+      - ENABLE_SOURCE_MAPS=false
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - database_url=postgresql+asyncpg://ddrive_admin:daily_pass@db:6432/daily_drive
+      - backend_public_url=/static
+      - secret=MahKidzR0ckAndTheyNeedGooDHabits
+    depends_on:
+      - db
+
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    command: -p 6432
+    ports:
+      - "6432:6432"
+
+volumes:
+  pgdata:
+
+
+networks:
+  default:
+    driver: bridge

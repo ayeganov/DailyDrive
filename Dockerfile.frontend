@@ -1,0 +1,37 @@
+# Build stage
+FROM node:lts-alpine3.20 AS builder
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy the rest of the application code
+COPY . .
+RUN rm -f .env.local
+
+
+ARG NEXT_PUBLIC_PUBLIC_URL
+ENV NEXT_PUBLIC_PUBLIC_URL=$NEXT_PUBLIC_PUBLIC_URL
+
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM node:lts-alpine3.20 AS runner
+
+WORKDIR /app
+
+# Copy necessary files from build stage
+COPY --from=builder /app/next.config.mjs ./
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the application
+CMD ["node", "server.js"]

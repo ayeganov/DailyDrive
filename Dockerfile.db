@@ -1,0 +1,18 @@
+FROM postgres:alpine3.20
+
+ENV POSTGRES_PASSWORD=daily_pass
+ENV POSTGRES_USER=ddrive_admin
+ENV POSTGRES_DB=daily_drive
+ENV PGPORT=6432
+
+# Add any additional customization here
+# For example, you could copy custom configuration files:
+# COPY custom-postgresql.conf /etc/postgresql/postgresql.conf
+
+# Or run initialization scripts:
+# COPY init.sql /docker-entrypoint-initdb.d/
+
+# Expose the PostgreSQL port
+EXPOSE 6432
+
+# Use the default entrypoint and cmd from the base image

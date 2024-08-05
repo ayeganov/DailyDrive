@@ -2,6 +2,7 @@
 const publicUrl = process.env.NEXT_PUBLIC_PUBLIC_URL;
 
 const nextConfig = {
+  output: 'standalone',
   async rewrites() {
     return [
       {
