@@ -16,4 +16,4 @@ class DailyDriveSettings(BaseSettings):
     backend_public_url: str = "/static"
     secret: str = "secret"
 
-    model_config = SettingsConfigDict(env_prefix="DDRIVE_", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="", env_file=".env")

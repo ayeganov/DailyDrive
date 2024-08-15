@@ -1,27 +1,22 @@
 import logging
-import os
-from contextlib import asynccontextmanager
 from typing import Annotated, List, Optional
 from uuid import UUID
 from operator import add, sub
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi_users import InvalidID, InvalidPasswordException
 from fastapi_users.exceptions import FastAPIUsersException
 from pydantic import BaseModel
 
 from .chore_repository import ChoreRepository, ChoreHistoryRepository, get_chore_db, get_chore_history_db
-from .database import create_db_and_tables
+from .state import lifespan, current_active_user
 from .dependencies import superuser_required
 from .models import ChoreTable, CurrentReward, Reward, UiChore, UiUser, User, UserFamily, UserRewardScores
 from .reward_calculator import ChoresResult, find_regularities_with_locations, archive_and_reset_user_chores
 from .reward_repository import RewardRepository, get_reward_db
-from .settings import DailyDriveSettings
-from .user_repository import (FamilyErrorCode, FamilyRepository, FamilyResult, UserCreate, UserManager, UserRead, UserUpdate, auth_backend,
-                             current_active_user, fastapi_users,
-                             get_family_repo, get_user_manager, make_family_error, make_family_result)
+from .user_repository import (FamilyErrorCode, FamilyRepository, FamilyResult, UserCreate, UserManager,
+                              get_family_repo, get_user_manager, make_family_error, make_family_result)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,19 +31,7 @@ MAX_TV_TIME = 60 * 28
 MAX_GAME_TIME = 60 * 28
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Not needed if you setup a migration system like Alembic
-    await create_db_and_tables()
-    yield
-
-
-settings = DailyDriveSettings()
 app = FastAPI(lifespan=lifespan, title="Daily Drive", version="0.1.0", redirect_slashes=False)
-app.mount(settings.backend_public_url,
-          StaticFiles(directory=os.path.join(os.path.dirname(__file__),
-          "../public")),
-          name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,34 +42,10 @@ app.add_middleware(
 )
 
 
-app.include_router(
-    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
-)
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_reset_password_router(),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_verify_router(UserRead),
-    prefix="/auth",
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    tags=["users"],
-)
-
-
 @app.get("/api/v1/chores", response_model=List[UiChore], tags=["chores"])
-async def get_chores(chore_repo: ChoreRepository = Depends(get_chore_db),
-                     user=Depends(current_active_user)):
+async def get_chores(
+                     user: Annotated[User, Depends(current_active_user)],
+                     chore_repo: ChoreRepository = Depends(get_chore_db),):
     logger.info("Getting all chores for user: %s", user.id)
     return await chore_repo.get_by_user_id(user.id)
 

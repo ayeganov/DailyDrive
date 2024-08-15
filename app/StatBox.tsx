@@ -121,7 +121,7 @@ export const StatBox: React.FC<StatBoxProps> = ({
         role="button"
         aria-haspopup="dialog"
         aria-expanded={isPickerOpen}
-        className="bg-white bg-opacity-20 rounded-lg p-2 text-center flex flex-col justify-center items-center w-auto min-w-[4rem] cursor-pointer"
+        className="bg-white bg-opacity-20 rounded-lg p-1 text-center flex flex-col justify-center items-center w-auto min-w-[4rem] cursor-pointer"
         onClick={togglePicker}
         onKeyUp={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {

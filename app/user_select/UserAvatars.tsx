@@ -49,7 +49,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, on_user_click }) => {
       <div className="lucky-font user-select-avatar three-d-style w-full max-w-xs bg-gradient-to-r from-purple-300 via-yellow-500 to-cyan-400 text-white shadow-lg rounded-lg transform hover:scale-105 transition duration-200">
 
         <figure className="px-10 pt-14 pb-0 flex justify-center">
-          <Image  onClick={() => on_user_click(user)}  src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg" alt={user.name} className="rounded-full border-4 border-white" width={100} height={100} />
+          <Image  onClick={() => on_user_click(user)}  src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" alt={user.name} className="rounded-full border-4 border-white" width={100} height={100} />
         </figure>
         <div className="card-body items-center text-center ">
           <h2 className="card-title bubblegum-sans-regular text-2xl p-2 rounded-md">{user.name}</h2>

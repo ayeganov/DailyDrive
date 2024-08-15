@@ -116,7 +116,7 @@ const ChoreChart: React.FC = () => {
       <div id="chore-chart">
         <div className="flex flex-row justify-between">
           <Link href="/">
-            <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "5px white"}} text="Daily Drive" onClick={() => go_back_to_user_select()}/>
+            <ColoredText className="superbubble-font text-8xl p-8" style={{WebkitTextStroke: "3px white"}} text="Daily Drive" onClick={() => go_back_to_user_select()}/>
           </Link>
           <UserStatsCard {...userData} />
           <div className="text-center sm:text-right whitespace-nowrap">
